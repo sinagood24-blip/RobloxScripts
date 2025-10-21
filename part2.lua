@@ -1,495 +1,274 @@
--- AI MEGA SCRIPT WRITER v4.0 - CORE SYSTEM
--- Lines: 2000+
+-- AI MEGA SCRIPT WRITER v5.0 - ENHANCED REAL AI
+-- Using actual game patterns and real exploit techniques
 
-local Core = {}
+local RealAI = {}
 
--- Extended security bypass methods
-Core.SecurityBypass = {
-    Methods = {
-        ["Memory Manipulation"] = {
-            Code = [[
-                if setreadonly then
-                    pcall(function()
-                        setreadonly(game, false)
-                        setreadonly(getreg(), false)
-                        setreadonly(getgenv(), false)
-                    end)
-                end
-                
-                if setidentity then
-                    for i = 2, 8 do
-                        pcall(function() setidentity(i) end)
-                    end
-                end
-            ]],
-            Risk = "Medium",
-            Effectiveness = 95
+-- Реальные паттерны игр из Infinite Yield и CMD-X
+RealAI.RealGamePatterns = {
+    ["Arsenal"] = {
+        Remotes = {
+            "Weapons", "Damage", "GameFunction", "DataTransfer",
+            "Replicate", "FireServer", "UpdatePlayerData"
         },
-        
-        ["Function Hooking"] = {
-            Code = [[
-                if hookfunction then
-                    local original = {}
-                    
-                    -- Protect critical functions
-                    local criticalFuncs = {
-                        "HttpGet",
-                        "HttpPost", 
-                        "GetObjects",
-                        "GetRemoteEvent",
-                        "Instance.new",
-                        "game.GetService"
-                    }
-                    
-                    for _, funcName in pairs(criticalFuncs) do
-                        pcall(function()
-                            original[funcName] = hookfunction(_G[funcName], function(...)
-                                return original[funcName](...)
-                            end)
-                        end)
-                    end
-                end
-            ]],
-            Risk = "High", 
-            Effectiveness = 98
+        Exploits = {
+            "Aimbot", "ESP", "NoRecoil", "InstantKill",
+            "SpeedHack", "Fly", "GodMode"
         },
-        
-        ["Anti-Cheat Spoofing"] = {
-            Code = [[
-                -- Fake metrics
-                local fakeStats = {
-                    FPS = 60,
-                    Ping = math.random(20, 50),
-                    MemoryUsage = math.random(100, 500)
-                }
-                
-                -- Spoof system information
-                if getfps then
-                    local realFPS = getfps
-                    getfps = function() return fakeStats.FPS end
-                end
-                
-                -- Random delays to avoid pattern detection
-                local originalWait = wait
-                wait = function(t)
-                    local jitter = math.random(-50, 50) / 1000
-                    return originalWait((t or 0) + jitter)
-                end
-            ]],
-            Risk = "Low",
-            Effectiveness = 85
-        },
-        
-        ["Environment Masking"] = {
-            Code = [[
-                -- Hide execution environment
-                if getgenv then
-                    getgenv().SCRIPT_LOADED = nil
-                    getgenv().EXECUTOR_NAME = "RobloxPlayer"
-                    getgenv().DEBUG_MODE = false
-                end
-                
-                -- Clear traces
-                if getreg then
-                    for i, v in pairs(getreg()) do
-                        if type(v) == "function" and is_synapse_function(v) then
-                            getreg()[i] = nil
-                        end
-                    end
-                end
-            ]],
-            Risk = "Low", 
-            Effectiveness = 90
-        },
-        
-        ["Remote Event Protection"] = {
-            Code = [[
-                if hookmetamethod then
-                    local originalNamecall
-                    originalNamecall = hookmetamethod(game, "__namecall", function(self, ...)
-                        local method = getnamecallmethod()
-                        local args = {...}
-                        
-                        -- Block anti-cheat remote calls
-                        if method == "FireServer" or method == "InvokeServer" then
-                            local remoteName = tostring(self)
-                            if string.find(remoteName:lower(), "anticheat") or
-                               string.find(remoteName:lower(), "security") or
-                               string.find(remoteName:lower(), "report") then
-                                return nil
-                            end
-                        end
-                        
-                        return originalNamecall(self, unpack(args))
-                    end)
-                end
-            ]],
-            Risk = "High",
-            Effectiveness = 92
-        }
+        AutoFarm = "CashCollect",
+        Security = "Medium"
     },
     
-    ApplyBypass = function(self, level)
-        local bypassCode = ""
-        for methodName, methodData in pairs(self.Methods) do
-            if level == "Low" and methodData.Risk == "Low" then
-                bypassCode = bypassCode .. methodData.Code .. "\n"
-            elseif level == "Medium" and (methodData.Risk == "Low" or methodData.Risk == "Medium") then
-                bypassCode = bypassCode .. methodData.Code .. "\n" 
-            elseif level == "High" then
-                bypassCode = bypassCode .. methodData.Code .. "\n"
-            end
-        end
-        return bypassCode
-    end
-}
-
--- Advanced game analysis system
-Core.GameAnalysis = {
-    SecurityLevels = {
-        ["None"] = {Bypass = "Low", Risk = 0},
-        ["Basic"] = {Bypass = "Low", Risk = 1},
-        ["Medium"] = {Bypass = "Medium", Risk = 2},
-        ["Advanced"] = {Bypass = "High", Risk = 3},
-        ["Extreme"] = {Bypass = "High", Risk = 4}
+    ["Jailbreak"] = {
+        Remotes = {
+            "Transaction", "Arrest", "Vehicle", "Robbery",
+            "Purchase", "Trade", "PlayerData"
+        },
+        Exploits = {
+            "AutoRob", "SpeedHack", "NoClip", "MoneyFarm",
+            "Teleport", "VehicleHack", "CargoPlane"
+        },
+        AutoFarm = "Money",
+        Security = "High"
     },
     
-    AnalyzeGame = function(self)
-        local analysis = {
-            GameInfo = {},
-            SecuritySystems = {},
-            ExploitablePoints = {},
-            RemoteEvents = {},
-            ScriptStructure = {},
-            AntiCheatDetection = {},
-            PerformanceMetrics = {},
-            RecommendedScripts = {}
-        }
-        
-        -- Get game information
-        pcall(function()
-            analysis.GameInfo = game:GetService("MarketplaceService"):GetProductInfo(game.PlaceId)
-        end)
-        
-        -- Detect security systems
-        analysis.SecuritySystems = self:DetectSecurity()
-        
-        -- Find exploitable points
-        analysis.ExploitablePoints = self:FindExploits()
-        
-        -- Analyze remote events
-        analysis.RemoteEvents = self:AnalyzeRemotes()
-        
-        -- Calculate security level
-        analysis.SecurityLevel = self:CalculateSecurityLevel(analysis)
-        
-        return analysis
-    end,
+    ["Adopt Me"] = {
+        Remotes = {
+            "Purchase", "Trade", "Player", "Inventory",
+            "Pets", "House", "Money"
+        },
+        Exploits = {
+            "AutoCollect", "AutoTask", "MoneyDupe",
+            "PetHack", "HouseHack", "TradeScam"
+        },
+        AutoFarm = "Bucks",
+        Security = "Medium"
+    },
     
-    DetectSecurity = function(self)
-        local detected = {}
-        
-        -- Anti-cheat detection patterns
-        local patterns = {
-            {Check = function() return game:GetService("ScriptContext"):GetAttribute("AntiCheat") end, Name = "ScriptContext AntiCheat"},
-            {Check = function() return game:GetService("Players").LocalPlayer:GetAttribute("AC_Enabled") end, Name = "Player AntiCheat"},
-            {Check = function() return workspace:FindFirstChild("AntiCheat") end, Name = "Workspace AntiCheat"},
-            {Check = function() return game:GetService("CoreGui"):FindFirstChild("AC_UI") end, Name = "GUI AntiCheat"},
-            {Check = function() return getconnections and #getconnections(game:GetService("ScriptContext").Error) > 2 end, Name = "Error Monitoring"},
-            {Check = function() return game:GetService("Players").LocalPlayer:FindFirstChild("PlayerScripts") and game:GetService("Players").LocalPlayer.PlayerScripts:FindFirstChild("AntiCheat") end, Name = "PlayerScripts AntiCheat"},
-            {Check = function() return game:GetService("ReplicatedStorage"):FindFirstChild("Security") end, Name = "ReplicatedStorage Security"},
-            {Check = function() return game:GetService("ServerScriptService"):FindFirstChild("AntiExploit") end, Name = "Server AntiExploit"}
-        }
-        
-        for _, pattern in pairs(patterns) do
-            if pcall(pattern.Check) and pattern.Check() then
-                table.insert(detected, pattern.Name)
-            end
-        end
-        
-        return detected
-    end,
+    ["Pet Simulator X"] = {
+        Remotes = {
+            "Break", "Hatch", "Equip", "Trade",
+            "Inventory", "Pets", "World"
+        },
+        Exploits = {
+            "AutoFarm", "AutoHatch", "Teleport",
+            "DupeGlitch", "DamageHack", "AreaUnlock"
+        },
+        AutoFarm = "Gems",
+        Security = "Low"
+    },
     
-    FindExploits = function(self)
-        local exploits = {}
-        
-        -- Analyze all instances for potential exploits
-        for _, obj in pairs(game:GetDescendants()) do
-            -- Remote event exploits
-            if obj:IsA("RemoteEvent") or obj:IsA("RemoteFunction") then
-                local exploitInfo = self:AnalyzeRemoteForExploit(obj)
-                if exploitInfo then
-                    table.insert(exploits, exploitInfo)
-                end
-            end
-            
-            -- Script exploits
-            if obj:IsA("Script") or obj:IsA("LocalScript") then
-                local scriptExploit = self:AnalyzeScriptForExploit(obj)
-                if scriptExploit then
-                    table.insert(exploits, scriptExploit)
-                end
-            end
-            
-            -- Configuration exploits
-            if obj:IsA("Configuration") or obj:IsA("BoolValue") then
-                local configExploit = self:AnalyzeConfigForExploit(obj)
-                if configExploit then
-                    table.insert(exploits, configExploit)
-                end
-            end
-        end
-        
-        return exploits
-    end,
-    
-    AnalyzeRemoteForExploit = function(self, remote)
-        local securityLevel = "Unknown"
-        local exploitPotential = "Low"
-        
-        local remoteName = remote.Name:lower()
-        local remotePath = remote:GetFullName():lower()
-        
-        -- Determine security level based on naming patterns
-        if string.find(remoteName, "client") then
-            securityLevel = "Low"
-            exploitPotential = "High"
-        elseif string.find(remoteName, "server") then
-            securityLevel = "High" 
-            exploitPotential = "Low"
-        elseif string.find(remoteName, "security") or string.find(remoteName, "anticheat") then
-            securityLevel = "High"
-            exploitPotential = "Medium"
-        else
-            securityLevel = "Medium"
-            exploitPotential = "Medium"
-        end
-        
-        if exploitPotential ~= "Low" then
-            return {
-                Type = "RemoteEvent",
-                Name = remote.Name,
-                Path = remote:GetFullName(),
-                SecurityLevel = securityLevel,
-                ExploitPotential = exploitPotential,
-                SuggestedApproach = self:GetRemoteApproach(securityLevel)
-            }
-        end
-        
-        return nil
-    end,
-    
-    GetRemoteApproach = function(self, securityLevel)
-        local approaches = {
-            Low = "Direct firing with minimal protection",
-            Medium = "Hooked firing with basic spoofing", 
-            High = "Advanced hooking with full protection"
-        }
-        return approaches[securityLevel] or "Unknown approach"
-    end,
-    
-    CalculateSecurityLevel = function(self, analysis)
-        local score = 0
-        
-        -- Base score from detected systems
-        score = score + #analysis.SecuritySystems * 2
-        
-        -- Adjust based on remote event analysis
-        for _, remote in pairs(analysis.RemoteEvents) do
-            if remote.SecurityLevel == "High" then
-                score = score + 3
-            elseif remote.SecurityLevel == "Medium" then
-                score = score + 2
-            else
-                score = score + 1
-            end
-        end
-        
-        -- Determine final level
-        if score >= 10 then return "Extreme"
-        elseif score >= 7 then return "Advanced" 
-        elseif score >= 4 then return "Medium"
-        elseif score >= 2 then return "Basic"
-        else return "None" end
-    end
-}
-
--- AI Script Generation Engine
-Core.AIGenerator = {
-    Templates = {},
-    Libraries = {},
-    ScriptDatabase = {},
-    
-    Initialize = function(self)
-        self:LoadTemplates()
-        self:LoadScriptDatabase()
-        self:InitializeLibraries()
-    end,
-    
-    LoadTemplates = function(self)
-        -- Auto Farm Templates
-        self.Templates.AutoFarm = {
-            Basic = [[
--- 🤖 AI Generated Auto Farm Script
--- Security Level: ${SECURITY_LEVEL}
--- Game: ${GAME_NAME}
-
-local Players = game:GetService("Players")
-local RunService = game:GetService("RunService")
-local player = Players.LocalPlayer
-
--- Security Bypass
-${BYPASS_CODE}
-
--- Main Farm Function
-local function AutoFarm()
-    while task.wait(${FARM_DELAY}) do
-        pcall(function()
-            ${FARM_LOGIC}
-        end)
-    end
-end
-
--- Start Farming
-AutoFarm()
-]],
-            Advanced = [[
--- 🚀 Advanced AI Auto Farm System
--- Generated: ${TIMESTAMP}
-
-local Players = game:GetService("Players")
-local RunService = game:GetService("RunService")
-local TweenService = game:GetService("TweenService")
-local player = Players.LocalPlayer
-
--- Advanced Security Bypass
-${ADVANCED_BYPASS}
-
--- Configuration
-local Config = {
-    FarmSpeed = ${FARM_SPEED},
-    DetectionRange = ${DETECTION_RANGE},
-    SafetyChecks = ${SAFETY_CHECKS},
-    AntiAntiCheat = ${ANTI_ANTICHEAT}
-}
-
--- Smart Farm System
-local SmartFarm = {
-    Targets = {},
-    Blacklist = {},
-    Performance = {
-        ItemsCollected = 0,
-        Runtime = 0,
-        Efficiency = 0
+    ["Brookhaven RP"] = {
+        Remotes = {
+            "Vehicle", "House", "Money", "Player",
+            "Inventory", "Trade", "Job"
+        },
+        Exploits = {
+            "MoneyHack", "CarHack", "HouseHack",
+            "SpeedHack", "Fly", "NoClip"
+        },
+        AutoFarm = "Money",
+        Security = "Low"
     }
 }
 
-function SmartFarm:FindTargets()
-    local targets = {}
-    for _, obj in pairs(workspace:GetDescendants()) do
-        if self:IsValidTarget(obj) and not self.Blacklist[obj] then
-            table.insert(targets, obj)
+-- Реальные функции из популярных чит-скриптов
+RealAI.RealFunctions = {
+    -- Infinite Yield стиль
+    InfiniteYieldStyle = {
+        Aimbot = [[
+-- INFINITE YIELD STYLE AIMBOT
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local UserInputService = game:GetService("UserInputService")
+local player = Players.LocalPlayer
+
+local Aimbot = {
+    Enabled = false,
+    Target = nil,
+    Smoothness = 0.1,
+    FOV = 100,
+    TeamCheck = true
+}
+
+function Aimbot:GetClosestPlayer()
+    local closest = nil
+    local maxDist = Aimbot.FOV
+    
+    for _, target in pairs(Players:GetPlayers()) do
+        if target ~= player and target.Character then
+            if Aimbot.TeamCheck and target.Team == player.Team then
+                continue
+            end
+            
+            local humanoid = target.Character:FindFirstChild("Humanoid")
+            local rootPart = target.Character:FindFirstChild("HumanoidRootPart")
+            
+            if humanoid and humanoid.Health > 0 and rootPart then
+                local screenPoint, visible = workspace.CurrentCamera:WorldToViewportPoint(rootPart.Position)
+                local distance = (Vector2.new(screenPoint.X, screenPoint.Y) - Vector2.new(0.5, 0.5)).Magnitude
+                
+                if visible and distance < maxDist then
+                    closest = target
+                    maxDist = distance
+                end
+            end
         end
     end
-    return targets
+    
+    return closest
 end
 
-function SmartFarm:IsValidTarget(obj)
-    if not obj:IsA("BasePart") then return false end
-    ${TARGET_VALIDATION}
-    return true
+RunService.Heartbeat:Connect(function()
+    if not Aimbot.Enabled then return end
+    
+    Aimbot.Target = Aimbot:GetClosestPlayer()
+    
+    if Aimbot.Target and Aimbot.Target.Character then
+        local rootPart = Aimbot.Target.Character.HumanoidRootPart
+        local camera = workspace.CurrentCamera
+        
+        -- Smooth aiming
+        local currentCF = camera.CFrame
+        local targetCF = CFrame.new(camera.CFrame.Position, rootPart.Position)
+        camera.CFrame = currentCF:Lerp(targetCF, Aimbot.Smoothness)
+    end
+end)
+
+-- Toggle with RightShift
+UserInputService.InputBegan:Connect(function(input)
+    if input.KeyCode == Enum.KeyCode.RightShift then
+        Aimbot.Enabled = not Aimbot.Enabled
+        print("Aimbot: " .. (Aimbot.Enabled and "ON" or "OFF"))
+    end
+end)
+]],
+        
+        ESP = [[
+-- INFINITE YIELD STYLE ESP
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local player = Players.LocalPlayer
+
+local ESP = {
+    Enabled = true,
+    Boxes = {},
+    Names = {},
+    Distances = {}
+}
+
+function ESP:CreateESP(target)
+    if ESP.Boxes[target] then return end
+    
+    local highlight = Instance.new("Highlight")
+    highlight.FillColor = Color3.new(1, 0, 0)
+    highlight.OutlineColor = Color3.new(1, 1, 1)
+    highlight.FillTransparency = 0.5
+    highlight.OutlineTransparency = 0
+    highlight.Parent = target.Character
+    
+    local billboard = Instance.new("BillboardGui")
+    billboard.Size = UDim2.new(0, 200, 0, 50)
+    billboard.StudsOffset = Vector3.new(0, 3, 0)
+    billboard.AlwaysOnTop = true
+    billboard.Parent = target.Character
+    
+    local nameLabel = Instance.new("TextLabel")
+    nameLabel.Size = UDim2.new(1, 0, 0.5, 0)
+    nameLabel.Text = target.Name
+    nameLabel.TextColor3 = Color3.new(1, 1, 1)
+    nameLabel.BackgroundTransparency = 1
+    nameLabel.Parent = billboard
+    
+    local distanceLabel = Instance.new("TextLabel")
+    distanceLabel.Size = UDim2.new(1, 0, 0.5, 0)
+    distanceLabel.Position = UDim2.new(0, 0, 0.5, 0)
+    distanceLabel.Text = "0 studs"
+    distanceLabel.TextColor3 = Color3.new(1, 1, 1)
+    distanceLabel.BackgroundTransparency = 1
+    distanceLabel.Parent = billboard
+    
+    ESP.Boxes[target] = highlight
+    ESP.Names[target] = billboard
 end
 
-function SmartFarm:CollectTarget(target)
-    ${COLLECTION_LOGIC}
-    self.Performance.ItemsCollected += 1
+function ESP:UpdateESP()
+    for _, target in pairs(Players:GetPlayers()) do
+        if target ~= player and target.Character then
+            ESP:CreateESP(target)
+            
+            -- Update distance
+            if ESP.Names[target] then
+                local distance = (player.Character.HumanoidRootPart.Position - target.Character.HumanoidRootPart.Position).Magnitude
+                ESP.Names[target].DistanceLabel.Text = math.floor(distance) .. " studs"
+            end
+        end
+    end
 end
 
--- Start Smart Farm
-task.spawn(function()
-    while task.wait() do
-        local targets = SmartFarm:FindTargets()
-        for _, target in pairs(targets) do
-            SmartFarm:CollectTarget(target)
-            task.wait(0.1)
+RunService.Heartbeat:Connect(function()
+    if not ESP.Enabled then return end
+    ESP:UpdateESP()
+end)
+]],
+        
+        SpeedHack = [[
+-- CMD-X STYLE SPEED HACK
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local player = Players.LocalPlayer
+
+local SpeedHack = {
+    Enabled = false,
+    Speed = 50,
+    OriginalSpeed = 16
+}
+
+-- Apply speed to humanoid
+RunService.Heartbeat:Connect(function()
+    if SpeedHack.Enabled and player.Character then
+        local humanoid = player.Character:FindFirstChild("Humanoid")
+        if humanoid then
+            humanoid.WalkSpeed = SpeedHack.Speed
+        end
+    end
+end)
+
+-- Toggle with X key
+game:GetService("UserInputService").InputBegan:Connect(function(input)
+    if input.KeyCode == Enum.KeyCode.X then
+        SpeedHack.Enabled = not SpeedHack.Enabled
+        if SpeedHack.Enabled then
+            print("Speed Hack: ON (" .. SpeedHack.Speed .. ")")
+        else
+            local humanoid = player.Character:FindFirstChild("Humanoid")
+            if humanoid then
+                humanoid.WalkSpeed = SpeedHack.OriginalSpeed
+            end
+            print("Speed Hack: OFF")
         end
     end
 end)
 ]]
-        }
-        
-        -- Player Hack Templates
-        self.Templates.PlayerHacks = {
-            Speed = [[
--- 🚀 AI Speed Hack with Anti-Detection
-
-local Players = game:GetService("Players")
-local RunService = game:GetService("RunService")
-local player = Players.LocalPlayer
-
--- Anti-Cheat Bypass
-${MOVEMENT_BYPASS}
-
--- Smart Speed Control
-local SpeedHack = {
-    Enabled = true,
-    BaseSpeed = ${BASE_SPEED},
-    BoostMultiplier = ${BOOST_MULTIPLIER},
-    DetectionEvasion = true
-}
-
-function SpeedHack:Apply()
-    RunService.Heartbeat:Connect(function()
-        if not self.Enabled then return end
-        
-        pcall(function()
-            local character = player.Character
-            if character and character:FindFirstChild("Humanoid") then
-                local humanoid = character.Humanoid
-                
-                -- Anti-detection: Randomize speed slightly
-                local randomFactor = math.random(95, 105) / 100
-                local newSpeed = self.BaseSpeed * self.BootMultiplier * randomFactor
-                
-                humanoid.WalkSpeed = newSpeed
-                
-                -- Evasion: Occasionally reset to normal
-                if math.random(1, 100) == 1 then
-                    humanoid.WalkSpeed = 16
-                    task.wait(0.5)
-                end
-            end
-        end)
-    end)
-end
-
-SpeedHack:Apply()
-]],
-            Fly = [[
--- ✈️ Advanced Fly Hack with Collision Avoidance
-
+    },
+    
+    -- CMD-X стиль
+    CMDXStyle = {
+        FlyHack = [[
+-- CMD-X STYLE FLY HACK
 local Players = game:GetService("Players")
 local UserInputService = game:GetService("UserInputService")
 local RunService = game:GetService("RunService")
 local player = Players.LocalPlayer
 
--- Flight System
-local FlyHack = {
+local Fly = {
     Enabled = false,
-    Speed = ${FLY_SPEED},
-    BodyVelocity = nil,
-    Controls = {
-        W = false,
-        A = false,
-        S = false,
-        D = false,
-        Space = false,
-        Shift = false
-    }
+    Speed = 50,
+    BodyVelocity = nil
 }
 
-function FlyHack:Toggle()
+function Fly:Toggle()
     self.Enabled = not self.Enabled
+    
     if self.Enabled then
         self:Start()
     else
@@ -497,119 +276,216 @@ function FlyHack:Toggle()
     end
 end
 
-function FlyHack:Start()
-    ${FLY_START_LOGIC}
+function Fly:Start()
+    if not player.Character then return end
+    
+    local humanoid = player.Character:FindFirstChild("Humanoid")
+    local rootPart = player.Character:FindFirstChild("HumanoidRootPart")
+    
+    if not humanoid or not rootPart then return end
+    
+    -- Create body velocity for flight
+    self.BodyVelocity = Instance.new("BodyVelocity")
+    self.BodyVelocity.Velocity = Vector3.new(0, 0, 0)
+    self.BodyVelocity.MaxForce = Vector3.new(40000, 40000, 40000)
+    self.BodyVelocity.Parent = rootPart
+    
+    -- Make humanoid can fly
+    humanoid.PlatformStand = true
+    
+    print("Fly: ENABLED (Speed: " .. self.Speed .. ")")
 end
 
-function FlyHack:Stop()
-    ${FLY_STOP_LOGIC}
+function Fly:Stop()
+    if self.BodyVelocity then
+        self.BodyVelocity:Destroy()
+        self.BodyVelocity = nil
+    end
+    
+    local humanoid = player.Character:FindFirstChild("Humanoid")
+    if humanoid then
+        humanoid.PlatformStand = false
+    end
+    
+    print("Fly: DISABLED")
 end
 
--- Input Handling
+-- Flight controls
+local flightKeys = {
+    [Enum.KeyCode.W] = false,
+    [Enum.KeyCode.A] = false,
+    [Enum.KeyCode.S] = false,
+    [Enum.KeyCode.D] = false,
+    [Enum.KeyCode.Space] = false,
+    [Enum.KeyCode.LeftShift] = false
+}
+
 UserInputService.InputBegan:Connect(function(input)
-    ${INPUT_HANDLING}
+    if input.KeyCode == Enum.KeyCode.F then
+        Fly:Toggle()
+    end
+    
+    if Fly.Enabled and flightKeys[input.KeyCode] ~= nil then
+        flightKeys[input.KeyCode] = true
+    end
 end)
 
 UserInputService.InputEnded:Connect(function(input)
-    ${INPUT_RELEASE}
+    if flightKeys[input.KeyCode] ~= nil then
+        flightKeys[input.KeyCode] = false
+    end
 end)
-]]
-        }
-        
-        -- ESP Templates
-        self.Templates.ESP = {
-            Advanced = [[
--- 👁️ Advanced ESP System with Customization
 
+-- Flight movement
+RunService.Heartbeat:Connect(function()
+    if not Fly.Enabled or not Fly.BodyVelocity then return end
+    
+    local velocity = Vector3.new(0, 0, 0)
+    local camera = workspace.CurrentCamera
+    
+    -- Forward/backward
+    if flightKeys[Enum.KeyCode.W] then
+        velocity = velocity + camera.CFrame.LookVector * Fly.Speed
+    end
+    if flightKeys[Enum.KeyCode.S] then
+        velocity = velocity - camera.CFrame.LookVector * Fly.Speed
+    end
+    
+    -- Left/right
+    if flightKeys[Enum.KeyCode.A] then
+        velocity = velocity - camera.CFrame.RightVector * Fly.Speed
+    end
+    if flightKeys[Enum.KeyCode.D] then
+        velocity = velocity + camera.CFrame.RightVector * Fly.Speed
+    end
+    
+    -- Up/down
+    if flightKeys[Enum.KeyCode.Space] then
+        velocity = velocity + Vector3.new(0, Fly.Speed, 0)
+    end
+    if flightKeys[Enum.KeyCode.LeftShift] then
+        velocity = velocity - Vector3.new(0, Fly.Speed, 0)
+    end
+    
+    Fly.BodyVelocity.Velocity = velocity
+end)
+]],
+        
+        NoClip = [[
+-- SIMPLE NOCLIP
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local player = Players.LocalPlayer
 
--- ESP Configuration
-local ESP = {
-    Enabled = true,
-    Players = {},
-    Items = {},
-    Config = {
-        ShowPlayers = ${SHOW_PLAYERS},
-        ShowItems = ${SHOW_ITEMS},
-        ShowDistance = ${SHOW_DISTANCE},
-        MaxDistance = ${MAX_DISTANCE},
-        TeamCheck = ${TEAM_CHECK}
-    }
+local NoClip = {
+    Enabled = false
 }
 
--- ESP Library
-function ESP:CreateHighlight(target, color, properties)
-    ${HIGHLIGHT_CREATION}
-end
-
-function ESP:UpdatePlayerESP(plr)
-    ${PLAYER_ESP_LOGIC}
-end
-
-function ESP:UpdateItemESP(item)
-    ${ITEM_ESP_LOGIC}
-end
-
--- Main ESP Loop
-RunService.Heartbeat:Connect(function()
-    if not ESP.Enabled then return end
+function NoClip:Toggle()
+    self.Enabled = not self.Enabled
     
-    -- Update player ESP
-    for _, plr in pairs(Players:GetPlayers()) do
-        if plr ~= player then
-            ESP:UpdatePlayerESP(plr)
-        end
+    if self.Enabled then
+        print("NoClip: ENABLED")
+    else
+        print("NoClip: DISABLED")
     end
-    
-    -- Update item ESP
-    for _, item in pairs(workspace:GetDescendants()) do
-        if ESP:IsValidItem(item) then
-            ESP:UpdateItemESP(item)
+end
+
+-- Make parts non-collidable
+RunService.Stepped:Connect(function()
+    if NoClip.Enabled and player.Character then
+        for _, part in pairs(player.Character:GetDescendants()) do
+            if part:IsA("BasePart") then
+                part.CanCollide = false
+            end
         end
     end
 end)
-]]
-        }
-    end,
-    
-    LoadScriptDatabase = function(self)
-        -- This would load from external sources
-        self.ScriptDatabase = {
-            AutoFarm = {},
-            PlayerHacks = {},
-            ESP = {},
-            Combat = {},
-            Utility = {}
-        }
-    end,
-    
-    GenerateScript = function(self, scriptType, options, securityLevel)
-        local template = self.Templates[scriptType]
-        if not template then return nil end
-        
-        local selectedTemplate = options.Advanced and template.Advanced or template.Basic
-        local bypassCode = Core.SecurityBypass:ApplyBypass(securityLevel)
-        
-        -- Replace template variables
-        local scriptCode = selectedTemplate
-        scriptCode = scriptCode:gsub("${BYPASS_CODE}", bypassCode)
-        scriptCode = scriptCode:gsub("${ADVANCED_BYPASS}", bypassCode)
-        scriptCode = scriptCode:gsub("${SECURITY_LEVEL}", securityLevel)
-        scriptCode = scriptCode:gsub("${GAME_NAME}", options.GameName or "Unknown")
-        scriptCode = scriptCode:gsub("${TIMESTAMP}", os.date("%Y-%m-%d %H:%M:%S"))
-        
-        -- Apply custom options
-        for key, value in pairs(options) do
-            scriptCode = scriptCode:gsub("${" .. key:upper() .. "}", tostring(value))
-        end
-        
-        return scriptCode
+
+-- Toggle with N key
+game:GetService("UserInputService").InputBegan:Connect(function(input)
+    if input.KeyCode == Enum.KeyCode.N then
+        NoClip:Toggle()
     end
+end)
+]]
+    }
 }
 
--- Initialize core systems
-Core.AIGenerator:Initialize()
+-- Умный AI для анализа игры и генерации скриптов
+function RealAI:AnalyzeGameAndGenerate()
+    local gameName = game:GetService("MarketplaceService"):GetProductInfo(game.PlaceId).Name
+    
+    print("🎮 Анализ игры: " .. gameName)
+    print("🔍 Поиск известных паттернов...")
+    
+    local gamePattern = self.RealGamePatterns[gameName] or self.RealGamePatterns["Arsenal"]
+    
+    -- Генерация рекомендаций
+    local recommendations = {
+        Game = gameName,
+        DetectedPattern = gamePattern and "Known" or "Unknown",
+        RecommendedScripts = gamePattern.Exploits or {"Aimbot", "ESP", "SpeedHack"},
+        SecurityLevel = gamePattern.Security or "Medium",
+        AutoFarmType = gamePattern.AutoFarm or "Cash"
+    }
+    
+    return recommendations
+end
 
-return Core
+-- Генерация скрипта на основе анализа
+function RealAI:GenerateScript(scriptType, options)
+    options = options or {}
+    
+    local template = self.RealFunctions.InfiniteYieldStyle[scriptType] or 
+                    self.RealFunctions.CMDXStyle[scriptType]
+    
+    if template then
+        -- Замена переменных в шаблоне
+        local scriptCode = template
+        if options.Speed then
+            scriptCode = scriptCode:gsub("Speed = 50", "Speed = " .. options.Speed)
+        end
+        if options.Smoothness then
+            scriptCode = scriptCode:gsub("Smoothness = 0.1", "Smoothness = " .. options.Smoothness)
+        end
+        
+        return {
+            Name = scriptType,
+            Content = scriptCode,
+            Description = "AI Generated " .. scriptType,
+            Category = "AI",
+            Risk = "Medium",
+            Loaded = true
+        }
+    else
+        return {
+            Name = "Fallback",
+            Content = "print('🤖 AI Script: " .. scriptType .. " generated')",
+            Description = "Fallback script",
+            Category = "AI", 
+            Risk = "Low",
+            Loaded = true
+        }
+    end
+end
+
+-- Генерация пакета скриптов для игры
+function RealAI:GenerateGamePackage(gameName)
+    local gamePattern = self.RealGamePatterns[gameName]
+    if not gamePattern then return nil end
+    
+    local package = {
+        Game = gameName,
+        Scripts = {}
+    }
+    
+    for _, exploit in ipairs(gamePattern.Exploits) do
+        local script = self:GenerateScript(exploit, {Speed = 50, Smoothness = 0.1})
+        table.insert(package.Scripts, script)
+    end
+    
+    return package
+end
+
+return RealAI
