@@ -1,5 +1,5 @@
--- AI Script Writer - Ultimate Cheat Hub v2.0
--- Fixed & Enhanced Version
+-- AI Script Writer - Ultimate Cheat Hub v2.1
+-- Fixed Generation Error
 
 local Players = game:GetService("Players")
 local TweenService = game:GetService("TweenService")
@@ -71,7 +71,7 @@ local TitleLabel = Instance.new("TextLabel")
 TitleLabel.Size = UDim2.new(1, -40, 1, 0)
 TitleLabel.Position = UDim2.new(0, 20, 0, 0)
 TitleLabel.BackgroundTransparency = 1
-TitleLabel.Text = "🤖 AI Script Writer v2.0"
+TitleLabel.Text = "🤖 AI Script Writer v2.1"
 TitleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
 TitleLabel.Font = Enum.Font.GothamBold
 TitleLabel.TextSize = 16
@@ -312,6 +312,11 @@ local function SaveScriptToFile(scriptName, scriptContent)
     local success, result = pcall(function()
         -- Try to save to executor's workspace
         if writefile then
+            -- Create directory if needed
+            pcall(function()
+                makefolder("AIScriptWriter")
+            end)
+            
             local fileName = "AIScriptWriter/" .. scriptName .. ".lua"
             writefile(fileName, scriptContent)
             return "✅ Saved to: " .. fileName
@@ -476,6 +481,29 @@ local scriptsDatabase = {
                 end
             ]],
             Category = "AutoFarm"
+        },
+        {
+            Name = "🌾 Auto Farm Resources",
+            Description = "Automatically farms resources and items",
+            Script = [[
+                -- Auto Farm Resources
+                local player = game.Players.LocalPlayer
+                
+                while wait(1) do
+                    pcall(function()
+                        -- Look for resource objects
+                        for _, obj in pairs(workspace:GetDescendants()) do
+                            if obj:IsA("Part") and (obj.Name:lower():find("ore") or obj.Name:lower():find("resource") or obj.Name:lower():find("tree")) then
+                                if player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+                                    player.Character.HumanoidRootPart.CFrame = obj.CFrame
+                                    wait(0.5)
+                                end
+                            end
+                        end
+                    end)
+                end
+            ]],
+            Category = "AutoFarm"
         }
     },
     PlayerMods = {
@@ -494,6 +522,40 @@ local scriptsDatabase = {
                 print("Speed hack activated! WalkSpeed: 50")
             ]],
             Category = "PlayerMods"
+        },
+        {
+            Name = "🦘 Jump Hack",
+            Description = "Increases player jump power (JumpPower 100)",
+            Script = [[
+                game:GetService("RunService").Stepped:Connect(function()
+                    pcall(function()
+                        local humanoid = game.Players.LocalPlayer.Character:FindFirstChild("Humanoid")
+                        if humanoid then
+                            humanoid.JumpPower = 100
+                        end
+                    end)
+                end)
+                print("Jump hack activated! JumpPower: 100")
+            ]],
+            Category = "PlayerMods"
+        }
+    },
+    ESP = {
+        {
+            Name = "👁️ Player ESP",
+            Description = "Highlights all players through walls",
+            Script = [[
+                -- Basic ESP implementation
+                for _, player in pairs(game:GetService("Players"):GetPlayers()) do
+                    if player ~= game.Players.LocalPlayer and player.Character then
+                        local highlight = Instance.new("Highlight")
+                        highlight.FillColor = Color3.fromRGB(255, 0, 0)
+                        highlight.OutlineColor = Color3.fromRGB(255, 255, 255)
+                        highlight.Parent = player.Character
+                    end
+                end
+            ]],
+            Category = "ESP"
         }
     }
 }
@@ -536,10 +598,16 @@ end
 
 -- Populate tabs with scripts
 for category, scripts in pairs(scriptsDatabase) do
-    local targetTab = Tab2 -- Default to Auto Farm
+    local targetTab
     
-    if category == "PlayerMods" then
+    if category == "AutoFarm" then
+        targetTab = Tab2
+    elseif category == "PlayerMods" then
         targetTab = Tab3
+    elseif category == "ESP" then
+        targetTab = Tab4
+    else
+        targetTab = Tab2
     end
     
     for i, scriptData in pairs(scripts) do
@@ -547,59 +615,107 @@ for category, scripts in pairs(scriptsDatabase) do
     end
 end
 
--- Enhanced AI Generator Tab
-local GenerateBtn = CreateGlowingButton("🤖 Generate Smart Script", Tab6, UDim2.new(1, -10, 0, 60), UDim2.new(0, 5, 0, 0))
-
-GenerateBtn.MouseButton1Click:Connect(function()
+-- FIXED AI Generator Function
+local function GenerateAIScript()
+    local gameName = AIData.GameAnalysis.GameName or "Unknown Game"
+    local securityLevel = AIData.GameAnalysis.SecurityLevel or "Unknown"
+    local remoteCount = AIData.GameAnalysis.RemoteEvents or 0
+    
     local generatedScript = [[
--- AI Generated Script for: ]] .. AIData.GameAnalysis.GameName .. [[
--- Generated by AI Script Writer v2.0
--- Security Level: ]] .. AIData.GameAnalysis.SecurityLevel .. [[
+-- 🤖 AI Generated Script for: ]] .. gameName .. [[
+-- Generated by AI Script Writer v2.1
+-- Security Level: ]] .. securityLevel .. [[
+-- Remote Events Found: ]] .. tostring(remoteCount) .. [[
+-- Generated on: ]] .. os.date("%Y-%m-%d %X") .. [[
 
-print("🤖 AI Script activated for: ]] .. AIData.GameAnalysis.GameName .. [[")
-print("🛡️ Detected Security: ]] .. AIData.GameAnalysis.SecurityLevel .. [[")
-print("📡 Remote Events Found: ]] .. tostring(AIData.GameAnalysis.RemoteEvents) .. [[
+print("🚀 AI Script activated for: ]] .. gameName .. [[")
+print("🛡️ Detected Security: ]] .. securityLevel .. [[")
+print("📡 Remote Events Found: ]] .. tostring(remoteCount) .. [[")
+
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local player = Players.LocalPlayer
 
 local function SafeExecute()
-    -- Auto-detect and exploit game mechanics
-    ]] .. [[
-    -- Game-specific analysis
-    for _, remote in pairs(game:GetService("ReplicatedStorage"):GetDescendants()) do
-        if remote:IsA("RemoteEvent") then
-            print("🔍 Found RemoteEvent: " .. remote.Name)
-        end
-    end
-    
-    -- Player enhancements
-    if game.Players.LocalPlayer.Character then
-        local humanoid = game.Players.LocalPlayer.Character:FindFirstChild("Humanoid")
+    -- Enhanced player stats
+    if player.Character then
+        local humanoid = player.Character:FindFirstChild("Humanoid")
         if humanoid then
             humanoid.WalkSpeed = 32
             humanoid.JumpPower = 55
+            print("✅ Player stats enhanced")
         end
     end
-    ]] .. [[
+    
+    -- Auto collect system
+    spawn(function()
+        while wait(2) do
+            pcall(function()
+                for _, obj in pairs(workspace:GetDescendants()) do
+                    if obj:IsA("Part") and (obj.Name:lower():find("cash") or obj.Name:lower():find("money") or obj.Name:lower():find("coin")) then
+                        if player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+                            firetouchinterest(player.Character.HumanoidRootPart, obj, 0)
+                            firetouchinterest(player.Character.HumanoidRootPart, obj, 1)
+                        end
+                    end
+                end
+            end)
+        end
+    end)
+    
+    -- Remote event analysis
+    local importantRemotes = {}
+    for _, obj in pairs(game:GetDescendants()) do
+        if obj:IsA("RemoteEvent") or obj:IsA("RemoteFunction") then
+            if string.find(obj.Name:lower(), "money") or string.find(obj.Name:lower(), "cash") or string.find(obj.Name:lower(), "reward") then
+                table.insert(importantRemotes, obj.Name)
+                print("💰 Important Remote Found: " .. obj.Name)
+            end
+        end
+    end
+    
+    print("🎯 AI Script fully loaded and running!")
 end
 
 -- Execute with error handling
 local success, err = pcall(SafeExecute)
 if not success then
-    warn("❌ AI Script Error: " .. err)
+    warn("❌ AI Script Error: " .. tostring(err))
 else
     print("✅ AI Script executed successfully!")
 end
+
+return "AI Script Generation Complete"
 ]]
+
+    return generatedScript
+end
+
+-- FIXED AI Generator Tab
+local GenerateBtn = CreateGlowingButton("🤖 Generate Smart Script", Tab6, UDim2.new(1, -10, 0, 60), UDim2.new(0, 5, 0, 0))
+
+GenerateBtn.MouseButton1Click:Connect(function()
+    print("🧠 Starting AI Script Generation...")
     
-    -- Execute and save
-    local success, err = pcall(function()
-        loadstring(generatedScript)()
-    end)
+    local success, generatedScript = pcall(GenerateAIScript)
     
-    if success then
-        print("✅ AI Script generated and executed!")
-        SaveScriptToFile("AI_Generated_Script", generatedScript)
+    if success and generatedScript then
+        -- Execute the generated script
+        local execSuccess, execError = pcall(function()
+            loadstring(generatedScript)()
+        end)
+        
+        if execSuccess then
+            print("✅ AI Script generated and executed successfully!")
+            
+            -- Save to file
+            local saveResult = SaveScriptToFile("AI_Generated_Script", generatedScript)
+            print(saveResult)
+        else
+            warn("❌ AI Script execution failed: " .. tostring(execError))
+        end
     else
-        warn("❌ AI Generation failed: " .. err)
+        warn("❌ AI Script generation failed: " .. tostring(generatedScript))
     end
 end)
 
@@ -607,12 +723,14 @@ end)
 local SaveAllBtn = CreateGlowingButton("💾 Save All Scripts to File", Tab7, UDim2.new(1, -10, 0, 50), UDim2.new(0, 5, 0, 0))
 
 SaveAllBtn.MouseButton1Click:Connect(function()
-    local allScripts = "-- AI Script Writer - All Scripts Collection\n-- Generated on: " .. os.date("%Y-%m-%d %X") .. "\n\n"
+    local allScripts = "-- AI Script Writer - All Scripts Collection\n-- Generated on: " .. os.date("%Y-%m-%d %X") .. "\n"
+    allScripts = allScripts .. "-- Total Scripts: " .. tostring(#scriptsDatabase.AutoFarm + #scriptsDatabase.PlayerMods + #scriptsDatabase.ESP) .. "\n\n"
     
     for category, scripts in pairs(scriptsDatabase) do
-        allScripts = allScripts .. "-- " .. category .. " Scripts --\n\n"
+        allScripts = allScripts .. "-- " .. category .. " Scripts (" .. #scripts .. " total) --\n\n"
         for i, scriptData in pairs(scripts) do
             allScripts = allScripts .. "-- " .. scriptData.Name .. "\n"
+            allScripts = allScripts .. "-- Description: " .. scriptData.Description .. "\n"
             allScripts = allScripts .. scriptData.Script .. "\n\n"
         end
     end
@@ -696,9 +814,22 @@ if tabs["Player Info"] then
     tabs["Player Info"].Button.MouseButton1Click()
 end
 
-print("🎉 AI Script Writer v2.0 loaded successfully!")
+-- Update UI sizes
+for _, tabData in pairs(tabs) do
+    if tabData.Content then
+        tabData.Content.CanvasSize = UDim2.new(0, 0, 0, tabData.Content.UIListLayout.AbsoluteContentSize.Y)
+    end
+end
+
+print("🎉 AI Script Writer v2.1 loaded successfully!")
 print("🔍 Initial Analysis Complete:")
 print("   Game: " .. AIData.GameAnalysis.GameName)
 print("   Security: " .. AIData.GameAnalysis.SecurityLevel)
 print("   Injector: " .. AIData.PlayerInfo.Injector)
-print("   Scripts Ready: " .. tostring(getn(scriptsDatabase.AutoFarm) + getn(scriptsDatabase.PlayerMods)))
+
+-- Count total scripts
+local totalScripts = 0
+for category, scripts in pairs(scriptsDatabase) do
+    totalScripts = totalScripts + #scripts
+end
+print("   Scripts Ready: " .. tostring(totalScripts))
