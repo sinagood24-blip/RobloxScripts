@@ -1,10 +1,20 @@
+-- Create AdvancedGUI table if it doesn't exist
+AdvancedGUI = AdvancedGUI or {}
+
 -- Fallback интерфейс (полная версия)
 function AdvancedGUI:CreateFallbackInterface(aiEngine, securitySystem)
     print("🛠️ USING FALLBACK INTERFACE...")
     
+    -- Check if CoreGui exists
+    local coreGui = game:GetService("CoreGui")
+    if not coreGui then
+        warn("❌ CoreGui not available")
+        return nil
+    end
+    
     local ScreenGui = Instance.new("ScreenGui")
     ScreenGui.Name = "AIScriptWriterFallback"
-    ScreenGui.Parent = game:GetService("CoreGui")
+    ScreenGui.Parent = coreGui
     
     local MainFrame = Instance.new("Frame")
     MainFrame.Size = UDim2.new(0, 600, 0, 500)
@@ -132,16 +142,24 @@ function AdvancedGUI:CreateFallbackInterface(aiEngine, securitySystem)
             -- Hide all tabs
             for _, tabData in pairs(Tabs) do
                 tabData.Content.Visible = false
-                game:GetService("TweenService"):Create(tabData.Button, TweenInfo.new(0.2), {
-                    BackgroundColor3 = Color3.fromRGB(40, 40, 60)
-                }):Play()
+                if game:GetService("TweenService") then
+                    game:GetService("TweenService"):Create(tabData.Button, TweenInfo.new(0.2), {
+                        BackgroundColor3 = Color3.fromRGB(40, 40, 60)
+                    }):Play()
+                else
+                    tabData.Button.BackgroundColor3 = Color3.fromRGB(40, 40, 60)
+                end
             end
             
             -- Show selected tab
             TabContent.Visible = true
-            game:GetService("TweenService"):Create(TabButton, TweenInfo.new(0.2), {
-                BackgroundColor3 = Color3.fromRGB(60, 80, 255)
-            }):Play()
+            if game:GetService("TweenService") then
+                game:GetService("TweenService"):Create(TabButton, TweenInfo.new(0.2), {
+                    BackgroundColor3 = Color3.fromRGB(60, 80, 255)
+                }):Play()
+            else
+                TabButton.BackgroundColor3 = Color3.fromRGB(60, 80, 255)
+            end
             
             CurrentTab = name
             TabContent.CanvasSize = UDim2.new(0, 0, 0, ContentLayout.AbsoluteContentSize.Y)
@@ -178,15 +196,23 @@ function AdvancedGUI:CreateFallbackInterface(aiEngine, securitySystem)
         
         -- Hover effects
         Button.MouseEnter:Connect(function()
-            game:GetService("TweenService"):Create(Button, TweenInfo.new(0.2), {
-                BackgroundColor3 = Color3.fromRGB(60, 80, 255)
-            }):Play()
+            if game:GetService("TweenService") then
+                game:GetService("TweenService"):Create(Button, TweenInfo.new(0.2), {
+                    BackgroundColor3 = Color3.fromRGB(60, 80, 255)
+                }):Play()
+            else
+                Button.BackgroundColor3 = Color3.fromRGB(60, 80, 255)
+            end
         end)
         
         Button.MouseLeave:Connect(function()
-            game:GetService("TweenService"):Create(Button, TweenInfo.new(0.2), {
-                BackgroundColor3 = Color3.fromRGB(40, 40, 60)
-            }):Play()
+            if game:GetService("TweenService") then
+                game:GetService("TweenService"):Create(Button, TweenInfo.new(0.2), {
+                    BackgroundColor3 = Color3.fromRGB(40, 40, 60)
+                }):Play()
+            else
+                Button.BackgroundColor3 = Color3.fromRGB(40, 40, 60)
+            end
         end)
         
         if callback then
@@ -234,8 +260,24 @@ function AdvancedGUI:CreateFallbackInterface(aiEngine, securitySystem)
     
     CreateSection("System Status", DashboardTab)
     
-    -- Game Analysis
-    local gameAnalysis = aiEngine:AnalyzeGameAndGenerate()
+    -- Safe game analysis with error handling
+    local gameAnalysis = {
+        Game = "Unknown Game",
+        SecurityLevel = "Unknown",
+        DetectedPattern = "None",
+        RecommendedScripts = {}
+    }
+    
+    if aiEngine and type(aiEngine.AnalyzeGameAndGenerate) == "function" then
+        local success, result = pcall(function()
+            return aiEngine:AnalyzeGameAndGenerate()
+        end)
+        if success then
+            gameAnalysis = result
+        else
+            warn("❌ Game analysis failed: " .. tostring(result))
+        end
+    end
     
     CreateLabel("🎮 Game: " .. gameAnalysis.Game, DashboardTab)
     CreateLabel("🛡️ Security: " .. gameAnalysis.SecurityLevel, DashboardTab)
@@ -245,25 +287,56 @@ function AdvancedGUI:CreateFallbackInterface(aiEngine, securitySystem)
     CreateSection("Quick Actions", DashboardTab)
     
     CreateButton("🚀 Apply Security Bypass", DashboardTab, function()
-        securitySystem:ApplyFullProtection()
-        print("✅ Security bypass applied!")
+        if securitySystem and type(securitySystem.ApplyFullProtection) == "function" then
+            local success, err = pcall(function()
+                securitySystem:ApplyFullProtection()
+            end)
+            if success then
+                print("✅ Security bypass applied!")
+            else
+                warn("❌ Security bypass failed: " .. tostring(err))
+            end
+        else
+            print("⚠️ Security system not available")
+        end
     end)
     
     CreateButton("🤖 Generate AI Script Pack", DashboardTab, function()
-        local package = aiEngine:GenerateGamePackage(gameAnalysis.Game)
-        if package then
-            print("✅ Generated " .. #package.Scripts .. " scripts for " .. package.Game)
-            for _, script in pairs(package.Scripts) do
+        if aiEngine and type(aiEngine.GenerateGamePackage) == "function" then
+            local success, package = pcall(function()
+                return aiEngine:GenerateGamePackage(gameAnalysis.Game)
+            end)
+            if success and package then
+                print("✅ Generated " .. (#package.Scripts or 0) .. " scripts for " .. (package.Game or "unknown"))
                 if writefile then
-                    writefile("AIScriptWriter/" .. script.Name .. ".lua", script.Content)
+                    for _, script in pairs(package.Scripts or {}) do
+                        pcall(function()
+                            writefile("AIScriptWriter/" .. script.Name .. ".lua", script.Content)
+                        end)
+                    end
                 end
+            else
+                warn("❌ Script generation failed")
             end
+        else
+            print("⚠️ AI Engine not available")
         end
     end)
     
     CreateButton("🔄 Refresh Analysis", DashboardTab, function()
-        gameAnalysis = aiEngine:AnalyzeGameAndGenerate()
-        print("✅ Analysis refreshed!")
+        if aiEngine and type(aiEngine.AnalyzeGameAndGenerate) == "function" then
+            local success, result = pcall(function()
+                return aiEngine:AnalyzeGameAndGenerate()
+            end)
+            if success then
+                gameAnalysis = result
+                print("✅ Analysis refreshed!")
+            else
+                warn("❌ Analysis refresh failed: " .. tostring(result))
+            end
+        else
+            print("⚠️ AI Engine not available")
+        end
     end)
     
     -- AI Generator Tab
@@ -294,38 +367,70 @@ function AdvancedGUI:CreateFallbackInterface(aiEngine, securitySystem)
     CreateSection("Script Generation", GeneratorTab)
     
     CreateButton("🎯 Generate AI Script", GeneratorTab, function()
-        local script = aiEngine:GenerateScript(selectedScript, {
-            Speed = speedValue,
-            Smoothness = smoothValue,
-            Safety = safetyToggle
-        })
-        
-        if script then
-            self:ShowFallbackScriptPreview(script)
+        if aiEngine and type(aiEngine.GenerateScript) == "function" then
+            local success, script = pcall(function()
+                return aiEngine:GenerateScript(selectedScript, {
+                    Speed = speedValue,
+                    Smoothness = smoothValue,
+                    Safety = safetyToggle
+                })
+            end)
+            
+            if success and script then
+                AdvancedGUI:ShowFallbackScriptPreview(script)
+            else
+                warn("❌ Script generation failed")
+            end
+        else
+            print("⚠️ AI Engine not available")
         end
     end)
     
     CreateButton("⚡ Generate & Execute", GeneratorTab, function()
-        local script = aiEngine:GenerateScript(selectedScript, {
-            Speed = speedValue,
-            Smoothness = smoothValue
-        })
-        
-        if script then
-            loadstring(script.Content)()
-            print("✅ Executed: " .. script.Name)
+        if aiEngine and type(aiEngine.GenerateScript) == "function" then
+            local success, script = pcall(function()
+                return aiEngine:GenerateScript(selectedScript, {
+                    Speed = speedValue,
+                    Smoothness = smoothValue
+                })
+            end)
+            
+            if success and script then
+                local execSuccess, execErr = pcall(function()
+                    loadstring(script.Content)()
+                end)
+                if execSuccess then
+                    print("✅ Executed: " .. script.Name)
+                else
+                    warn("❌ Execution failed: " .. tostring(execErr))
+                end
+            else
+                warn("❌ Script generation failed")
+            end
+        else
+            print("⚠️ AI Engine not available")
         end
     end)
     
     CreateButton("💾 Generate & Save", GeneratorTab, function()
-        local script = aiEngine:GenerateScript(selectedScript, {
-            Speed = speedValue,
-            Smoothness = smoothValue
-        })
-        
-        if script and writefile then
-            writefile("AIScriptWriter/" .. script.Name .. ".lua", script.Content)
-            print("✅ Saved: " .. script.Name .. ".lua")
+        if aiEngine and type(aiEngine.GenerateScript) == "function" then
+            local success, script = pcall(function()
+                return aiEngine:GenerateScript(selectedScript, {
+                    Speed = speedValue,
+                    Smoothness = smoothValue
+                })
+            end)
+            
+            if success and script and writefile then
+                pcall(function()
+                    writefile("AIScriptWriter/" .. script.Name .. ".lua", script.Content)
+                    print("✅ Saved: " .. script.Name .. ".lua")
+                end)
+            else
+                warn("❌ Save failed")
+            end
+        else
+            print("⚠️ AI Engine not available")
         end
     end)
     
@@ -345,10 +450,24 @@ function AdvancedGUI:CreateFallbackInterface(aiEngine, securitySystem)
     
     for _, scriptData in pairs(popularScripts) do
         CreateButton(scriptData[1], HubTab, function()
-            local script = aiEngine:GenerateScript(scriptData[1], {})
-            if script then
-                loadstring(script.Content)()
-                print("✅ Loaded: " .. scriptData[2])
+            if aiEngine and type(aiEngine.GenerateScript) == "function" then
+                local success, script = pcall(function()
+                    return aiEngine:GenerateScript(scriptData[1], {})
+                end)
+                if success and script then
+                    local execSuccess, execErr = pcall(function()
+                        loadstring(script.Content)()
+                    end)
+                    if execSuccess then
+                        print("✅ Loaded: " .. scriptData[2])
+                    else
+                        warn("❌ Load failed: " .. tostring(execErr))
+                    end
+                else
+                    warn("❌ Script generation failed")
+                end
+            else
+                print("⚠️ AI Engine not available")
             end
         end)
     end
@@ -358,8 +477,24 @@ function AdvancedGUI:CreateFallbackInterface(aiEngine, securitySystem)
     
     CreateSection("Security Analysis", SecurityTab)
     
-    local detectedSystems = securitySystem.AntiCheatDetector:DetectSystems()
-    local securityLevel = securitySystem.AntiCheatDetector:GetSecurityLevel(detectedSystems)
+    local detectedSystems = {"None detected"}
+    local securityLevel = "Unknown"
+    
+    if securitySystem and securitySystem.AntiCheatDetector then
+        local success1, result1 = pcall(function()
+            return securitySystem.AntiCheatDetector:DetectSystems()
+        end)
+        if success1 then
+            detectedSystems = result1
+        end
+        
+        local success2, result2 = pcall(function()
+            return securitySystem.AntiCheatDetector:GetSecurityLevel(detectedSystems)
+        end)
+        if success2 then
+            securityLevel = result2
+        end
+    end
     
     for _, system in pairs(detectedSystems) do
         CreateLabel("🔍 " .. system, SecurityTab)
@@ -378,17 +513,39 @@ function AdvancedGUI:CreateFallbackInterface(aiEngine, securitySystem)
     
     for _, bypassData in pairs(bypassMethods) do
         CreateButton(bypassData[1], SecurityTab, function()
-            local bypassCode = securitySystem.BypassMethods[bypassData[2]]
-            if bypassCode then
-                loadstring(bypassCode)()
-                print("✅ Applied: " .. bypassData[1])
+            if securitySystem and securitySystem.BypassMethods then
+                local bypassCode = securitySystem.BypassMethods[bypassData[2]]
+                if bypassCode then
+                    local success, err = pcall(function()
+                        loadstring(bypassCode)()
+                    end)
+                    if success then
+                        print("✅ Applied: " .. bypassData[1])
+                    else
+                        warn("❌ Bypass failed: " .. tostring(err))
+                    end
+                else
+                    print("⚠️ Bypass method not available")
+                end
+            else
+                print("⚠️ Security system not available")
             end
         end)
     end
     
     CreateButton("🛡️ Apply All Bypasses", SecurityTab, function()
-        securitySystem:ApplyFullProtection()
-        print("✅ All security systems activated!")
+        if securitySystem and type(securitySystem.ApplyFullProtection) == "function" then
+            local success, err = pcall(function()
+                securitySystem:ApplyFullProtection()
+            end)
+            if success then
+                print("✅ All security systems activated!")
+            else
+                warn("❌ Security activation failed: " .. tostring(err))
+            end
+        else
+            print("⚠️ Security system not available")
+        end
     end)
     
     -- Settings Tab
@@ -413,12 +570,14 @@ function AdvancedGUI:CreateFallbackInterface(aiEngine, securitySystem)
     
     -- Close button functionality
     CloseButton.MouseButton1Click:Connect(function()
-        game:GetService("TweenService"):Create(MainFrame, TweenInfo.new(0.3), {
-            Size = UDim2.new(0, 0, 0, 0),
-            Position = UDim2.new(0.5, 0, 0.5, 0)
-        }):Play()
-        
-        wait(0.3)
+        if game:GetService("TweenService") then
+            game:GetService("TweenService"):Create(MainFrame, TweenInfo.new(0.3), {
+                Size = UDim2.new(0, 0, 0, 0),
+                Position = UDim2.new(0.5, 0, 0.5, 0)
+            }):Play()
+            
+            wait(0.3)
+        end
         ScreenGui:Destroy()
     end)
     
@@ -451,11 +610,14 @@ function AdvancedGUI:CreateFallbackInterface(aiEngine, securitySystem)
         end
     end)
     
-    game:GetService("UserInputService").InputChanged:Connect(function(input)
-        if input == dragInput and dragging then
-            update(input)
-        end
-    end)
+    local userInputService = game:GetService("UserInputService")
+    if userInputService then
+        userInputService.InputChanged:Connect(function(input)
+            if input == dragInput and dragging then
+                update(input)
+            end
+        end)
+    end
     
     -- Activate first tab
     if Tabs["Dashboard"] then
@@ -467,9 +629,20 @@ end
 
 -- Fallback script preview
 function AdvancedGUI:ShowFallbackScriptPreview(script)
+    if not script then
+        warn("❌ No script provided for preview")
+        return
+    end
+    
+    local coreGui = game:GetService("CoreGui")
+    if not coreGui then
+        warn("❌ CoreGui not available")
+        return
+    end
+    
     local PreviewGUI = Instance.new("ScreenGui")
     PreviewGUI.Name = "ScriptPreview"
-    PreviewGUI.Parent = game:GetService("CoreGui")
+    PreviewGUI.Parent = coreGui
     
     local PreviewFrame = Instance.new("Frame")
     PreviewFrame.Size = UDim2.new(0, 500, 0, 400)
@@ -499,7 +672,7 @@ function AdvancedGUI:ShowFallbackScriptPreview(script)
     Title.Size = UDim2.new(1, -100, 1, 0)
     Title.Position = UDim2.new(0, 20, 0, 0)
     Title.BackgroundTransparency = 1
-    Title.Text = "Script Preview - " .. script.Name
+    Title.Text = "Script Preview - " .. (script.Name or "Unknown")
     Title.TextColor3 = Color3.fromRGB(255, 255, 255)
     Title.Font = Enum.Font.GothamBold
     Title.TextSize = 16
@@ -553,14 +726,19 @@ function AdvancedGUI:ShowFallbackScriptPreview(script)
         return Label
     end
     
-    CreateLabel("Name: " .. script.Name, ContentFrame)
-    CreateLabel("Category: " .. script.Category, ContentFrame)
-    CreateLabel("Risk: " .. script.Risk, ContentFrame)
+    CreateLabel("Name: " .. (script.Name or "Unknown"), ContentFrame)
+    CreateLabel("Category: " .. (script.Category or "General"), ContentFrame)
+    CreateLabel("Risk: " .. (script.Risk or "Unknown"), ContentFrame)
     
     -- Script content (truncated)
-    local previewText = string.sub(script.Content, 1, 1000)
-    if #script.Content > 1000 then
-        previewText = previewText .. "\n\n... [content truncated] ..."
+    local previewText = ""
+    if script.Content then
+        previewText = string.sub(script.Content, 1, 1000)
+        if #script.Content > 1000 then
+            previewText = previewText .. "\n\n... [content truncated] ..."
+        end
+    else
+        previewText = "No script content available"
     end
     
     local ContentLabel = Instance.new("TextLabel")
@@ -607,23 +785,43 @@ function AdvancedGUI:ShowFallbackScriptPreview(script)
     end
     
     CreateActionButton("▶️ Execute", function()
-        loadstring(script.Content)()
+        if script and script.Content then
+            local success, err = pcall(function()
+                loadstring(script.Content)()
+            end)
+            if success then
+                print("✅ Executed: " .. (script.Name or "Unknown"))
+            else
+                warn("❌ Execution failed: " .. tostring(err))
+            end
+        end
         PreviewGUI:Destroy()
-        print("✅ Executed: " .. script.Name)
     end)
     
     CreateActionButton("💾 Save", function()
-        if writefile then
-            writefile("AIScriptWriter/" .. script.Name .. ".lua", script.Content)
-            PreviewGUI:Destroy()
-            print("✅ Saved: " .. script.Name .. ".lua")
+        if script and script.Content and writefile then
+            local success, err = pcall(function()
+                writefile("AIScriptWriter/" .. (script.Name or "script") .. ".lua", script.Content)
+            end)
+            if success then
+                print("✅ Saved: " .. (script.Name or "script") .. ".lua")
+            else
+                warn("❌ Save failed: " .. tostring(err))
+            end
         end
+        PreviewGUI:Destroy()
     end)
     
     CreateActionButton("📋 Copy", function()
-        if setclipboard then
-            setclipboard(script.Content)
-            print("✅ Copied to clipboard!")
+        if script and script.Content and setclipboard then
+            local success, err = pcall(function()
+                setclipboard(script.Content)
+            end)
+            if success then
+                print("✅ Copied to clipboard!")
+            else
+                warn("❌ Copy failed: " .. tostring(err))
+            end
         end
     end)
     
