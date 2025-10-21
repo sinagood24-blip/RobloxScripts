@@ -1,17 +1,20 @@
--- Create AdvancedGUI table if it doesn't exist
-AdvancedGUI = AdvancedGUI or {}
+-- Полностью автономный Fallback GUI
+local AdvancedGUI = {}
 
--- Fallback интерфейс (полная версия)
-function AdvancedGUI:CreateFallbackInterface(aiEngine, securitySystem)
-    print("🛠️ USING FALLBACK INTERFACE...")
+function AdvancedGUI:CreateFallbackInterface()
+    print("🛠️ CREATING AUTONOMOUS FALLBACK INTERFACE...")
     
-    -- Check if CoreGui exists
-    local coreGui = game:GetService("CoreGui")
-    if not coreGui then
+    -- Проверяем доступность CoreGui
+    local success, coreGui = pcall(function()
+        return game:GetService("CoreGui")
+    end)
+    
+    if not success then
         warn("❌ CoreGui not available")
         return nil
     end
     
+    -- Создаем основной GUI
     local ScreenGui = Instance.new("ScreenGui")
     ScreenGui.Name = "AIScriptWriterFallback"
     ScreenGui.Parent = coreGui
@@ -59,7 +62,7 @@ function AdvancedGUI:CreateFallbackInterface(aiEngine, securitySystem)
     SubTitle.Size = UDim2.new(1, -100, 0, 20)
     SubTitle.Position = UDim2.new(0, 20, 0, 35)
     SubTitle.BackgroundTransparency = 1
-    SubTitle.Text = "Fallback Interface - Full Functional"
+    SubTitle.Text = "Autonomous Fallback Interface"
     SubTitle.TextColor3 = Color3.fromRGB(180, 180, 255)
     SubTitle.Font = Enum.Font.Gotham
     SubTitle.TextSize = 12
@@ -142,26 +145,16 @@ function AdvancedGUI:CreateFallbackInterface(aiEngine, securitySystem)
             -- Hide all tabs
             for _, tabData in pairs(Tabs) do
                 tabData.Content.Visible = false
-                if game:GetService("TweenService") then
-                    game:GetService("TweenService"):Create(tabData.Button, TweenInfo.new(0.2), {
-                        BackgroundColor3 = Color3.fromRGB(40, 40, 60)
-                    }):Play()
-                else
-                    tabData.Button.BackgroundColor3 = Color3.fromRGB(40, 40, 60)
-                end
+                tabData.Button.BackgroundColor3 = Color3.fromRGB(40, 40, 60)
             end
             
             -- Show selected tab
             TabContent.Visible = true
-            if game:GetService("TweenService") then
-                game:GetService("TweenService"):Create(TabButton, TweenInfo.new(0.2), {
-                    BackgroundColor3 = Color3.fromRGB(60, 80, 255)
-                }):Play()
-            else
-                TabButton.BackgroundColor3 = Color3.fromRGB(60, 80, 255)
-            end
+            TabButton.BackgroundColor3 = Color3.fromRGB(60, 80, 255)
             
             CurrentTab = name
+            -- Update canvas size with delay to ensure proper calculation
+            wait(0.1)
             TabContent.CanvasSize = UDim2.new(0, 0, 0, ContentLayout.AbsoluteContentSize.Y)
         end)
         
@@ -196,23 +189,11 @@ function AdvancedGUI:CreateFallbackInterface(aiEngine, securitySystem)
         
         -- Hover effects
         Button.MouseEnter:Connect(function()
-            if game:GetService("TweenService") then
-                game:GetService("TweenService"):Create(Button, TweenInfo.new(0.2), {
-                    BackgroundColor3 = Color3.fromRGB(60, 80, 255)
-                }):Play()
-            else
-                Button.BackgroundColor3 = Color3.fromRGB(60, 80, 255)
-            end
+            Button.BackgroundColor3 = Color3.fromRGB(60, 80, 255)
         end)
         
         Button.MouseLeave:Connect(function()
-            if game:GetService("TweenService") then
-                game:GetService("TweenService"):Create(Button, TweenInfo.new(0.2), {
-                    BackgroundColor3 = Color3.fromRGB(40, 40, 60)
-                }):Play()
-            else
-                Button.BackgroundColor3 = Color3.fromRGB(40, 40, 60)
-            end
+            Button.BackgroundColor3 = Color3.fromRGB(40, 40, 60)
         end)
         
         if callback then
@@ -260,325 +241,151 @@ function AdvancedGUI:CreateFallbackInterface(aiEngine, securitySystem)
     
     CreateSection("System Status", DashboardTab)
     
-    -- Safe game analysis with error handling
-    local gameAnalysis = {
-        Game = "Unknown Game",
-        SecurityLevel = "Unknown",
-        DetectedPattern = "None",
-        RecommendedScripts = {}
-    }
-    
-    if aiEngine and type(aiEngine.AnalyzeGameAndGenerate) == "function" then
-        local success, result = pcall(function()
-            return aiEngine:AnalyzeGameAndGenerate()
-        end)
-        if success then
-            gameAnalysis = result
-        else
-            warn("❌ Game analysis failed: " .. tostring(result))
-        end
+    -- Basic game detection
+    local gameName = "Unknown Game"
+    local success, currentGame = pcall(function()
+        return game:GetService("MarketplaceService"):GetProductInfo(game.PlaceId).Name
+    end)
+    if success then
+        gameName = currentGame
+    else
+        gameName = "Game ID: " .. tostring(game.PlaceId)
     end
     
-    CreateLabel("🎮 Game: " .. gameAnalysis.Game, DashboardTab)
-    CreateLabel("🛡️ Security: " .. gameAnalysis.SecurityLevel, DashboardTab)
-    CreateLabel("🎯 Pattern: " .. gameAnalysis.DetectedPattern, DashboardTab)
-    CreateLabel("📊 Scripts: " .. #gameAnalysis.RecommendedScripts .. " recommended", DashboardTab)
+    CreateLabel("🎮 Game: " .. gameName, DashboardTab)
+    CreateLabel("🛡️ Security: Autonomous Mode", DashboardTab)
+    CreateLabel("🎯 Status: Fallback Interface Active", DashboardTab)
+    CreateLabel("📊 Features: Full GUI System", DashboardTab)
     
     CreateSection("Quick Actions", DashboardTab)
     
-    CreateButton("🚀 Apply Security Bypass", DashboardTab, function()
-        if securitySystem and type(securitySystem.ApplyFullProtection) == "function" then
-            local success, err = pcall(function()
-                securitySystem:ApplyFullProtection()
-            end)
-            if success then
-                print("✅ Security bypass applied!")
-            else
-                warn("❌ Security bypass failed: " .. tostring(err))
-            end
-        else
-            print("⚠️ Security system not available")
-        end
-    end)
-    
-    CreateButton("🤖 Generate AI Script Pack", DashboardTab, function()
-        if aiEngine and type(aiEngine.GenerateGamePackage) == "function" then
-            local success, package = pcall(function()
-                return aiEngine:GenerateGamePackage(gameAnalysis.Game)
-            end)
-            if success and package then
-                print("✅ Generated " .. (#package.Scripts or 0) .. " scripts for " .. (package.Game or "unknown"))
-                if writefile then
-                    for _, script in pairs(package.Scripts or {}) do
-                        pcall(function()
-                            writefile("AIScriptWriter/" .. script.Name .. ".lua", script.Content)
-                        end)
-                    end
-                end
-            else
-                warn("❌ Script generation failed")
-            end
-        else
-            print("⚠️ AI Engine not available")
-        end
-    end)
-    
-    CreateButton("🔄 Refresh Analysis", DashboardTab, function()
-        if aiEngine and type(aiEngine.AnalyzeGameAndGenerate) == "function" then
-            local success, result = pcall(function()
-                return aiEngine:AnalyzeGameAndGenerate()
-            end)
-            if success then
-                gameAnalysis = result
-                print("✅ Analysis refreshed!")
-            else
-                warn("❌ Analysis refresh failed: " .. tostring(result))
-            end
-        else
-            print("⚠️ AI Engine not available")
-        end
-    end)
-    
-    -- AI Generator Tab
-    local GeneratorTab = CreateTab("AI Generator", "🤖")
-    
-    CreateSection("Script Selection", GeneratorTab)
-    
-    local scriptTypes = {"Aimbot", "ESP", "SpeedHack", "FlyHack", "NoClip", "AutoFarm"}
-    local selectedScript = "Aimbot"
-    
-    for _, scriptType in pairs(scriptTypes) do
-        CreateButton(scriptType, GeneratorTab, function()
-            selectedScript = scriptType
-            print("✅ Selected: " .. scriptType)
-        end)
-    end
-    
-    CreateSection("Generation Settings", GeneratorTab)
-    
-    local speedValue = 50
-    local smoothValue = 0.1
-    local safetyToggle = true
-    
-    CreateLabel("Speed: " .. speedValue, GeneratorTab)
-    CreateLabel("Smoothness: " .. smoothValue, GeneratorTab)
-    CreateLabel("Safety: " .. tostring(safetyToggle), GeneratorTab)
-    
-    CreateSection("Script Generation", GeneratorTab)
-    
-    CreateButton("🎯 Generate AI Script", GeneratorTab, function()
-        if aiEngine and type(aiEngine.GenerateScript) == "function" then
-            local success, script = pcall(function()
-                return aiEngine:GenerateScript(selectedScript, {
-                    Speed = speedValue,
-                    Smoothness = smoothValue,
-                    Safety = safetyToggle
-                })
-            end)
-            
-            if success and script then
-                AdvancedGUI:ShowFallbackScriptPreview(script)
-            else
-                warn("❌ Script generation failed")
-            end
-        else
-            print("⚠️ AI Engine not available")
-        end
-    end)
-    
-    CreateButton("⚡ Generate & Execute", GeneratorTab, function()
-        if aiEngine and type(aiEngine.GenerateScript) == "function" then
-            local success, script = pcall(function()
-                return aiEngine:GenerateScript(selectedScript, {
-                    Speed = speedValue,
-                    Smoothness = smoothValue
-                })
-            end)
-            
-            if success and script then
-                local execSuccess, execErr = pcall(function()
-                    loadstring(script.Content)()
-                end)
-                if execSuccess then
-                    print("✅ Executed: " .. script.Name)
-                else
-                    warn("❌ Execution failed: " .. tostring(execErr))
-                end
-            else
-                warn("❌ Script generation failed")
-            end
-        else
-            print("⚠️ AI Engine not available")
-        end
-    end)
-    
-    CreateButton("💾 Generate & Save", GeneratorTab, function()
-        if aiEngine and type(aiEngine.GenerateScript) == "function" then
-            local success, script = pcall(function()
-                return aiEngine:GenerateScript(selectedScript, {
-                    Speed = speedValue,
-                    Smoothness = smoothValue
-                })
-            end)
-            
-            if success and script and writefile then
-                pcall(function()
-                    writefile("AIScriptWriter/" .. script.Name .. ".lua", script.Content)
-                    print("✅ Saved: " .. script.Name .. ".lua")
-                end)
-            else
-                warn("❌ Save failed")
-            end
-        else
-            print("⚠️ AI Engine not available")
-        end
-    end)
-    
-    -- Script Hub Tab
-    local HubTab = CreateTab("Script Hub", "📁")
-    
-    CreateSection("Popular Scripts", HubTab)
-    
-    local popularScripts = {
-        {"Aimbot", "InfiniteYield Style Aimbot"},
-        {"ESP", "Player ESP with Boxes"},
-        {"SpeedHack", "Speed Hack with Toggle"},
-        {"FlyHack", "Advanced Flying System"},
-        {"NoClip", "Walk through walls"},
-        {"AutoFarm", "Auto collect resources"}
-    }
-    
-    for _, scriptData in pairs(popularScripts) do
-        CreateButton(scriptData[1], HubTab, function()
-            if aiEngine and type(aiEngine.GenerateScript) == "function" then
-                local success, script = pcall(function()
-                    return aiEngine:GenerateScript(scriptData[1], {})
-                end)
-                if success and script then
-                    local execSuccess, execErr = pcall(function()
-                        loadstring(script.Content)()
-                    end)
-                    if execSuccess then
-                        print("✅ Loaded: " .. scriptData[2])
-                    else
-                        warn("❌ Load failed: " .. tostring(execErr))
-                    end
-                else
-                    warn("❌ Script generation failed")
-                end
-            else
-                print("⚠️ AI Engine not available")
-            end
-        end)
-    end
-    
-    -- Security Tab
-    local SecurityTab = CreateTab("Security", "🛡️")
-    
-    CreateSection("Security Analysis", SecurityTab)
-    
-    local detectedSystems = {"None detected"}
-    local securityLevel = "Unknown"
-    
-    if securitySystem and securitySystem.AntiCheatDetector then
-        local success1, result1 = pcall(function()
-            return securitySystem.AntiCheatDetector:DetectSystems()
-        end)
-        if success1 then
-            detectedSystems = result1
-        end
+    CreateButton("🚀 Test Basic Script", DashboardTab, function()
+        print("✅ Testing basic script execution...")
+        -- Simple test script
+        local testScript = [[
+            print("🤖 AI Script Writer Test Script Loaded!")
+            game:GetService("Players").LocalPlayer:SetAttribute("AITest", true)
+        ]]
         
-        local success2, result2 = pcall(function()
-            return securitySystem.AntiCheatDetector:GetSecurityLevel(detectedSystems)
+        local success, err = pcall(function()
+            loadstring(testScript)()
         end)
-        if success2 then
-            securityLevel = result2
+        
+        if success then
+            print("✅ Test script executed successfully!")
+        else
+            warn("❌ Test script failed: " .. tostring(err))
         end
-    end
+    end)
     
-    for _, system in pairs(detectedSystems) do
-        CreateLabel("🔍 " .. system, SecurityTab)
-    end
-    
-    CreateLabel("🛡️ Security Level: " .. securityLevel, SecurityTab)
-    
-    CreateSection("Bypass Methods", SecurityTab)
-    
-    local bypassMethods = {
-        {"Memory Protection", "MemoryProtection"},
-        {"Function Hooking", "HookProtection"},
-        {"Anti-Detection", "AntiDetection"},
-        {"Remote Spoofing", "RemoteSpoofing"}
-    }
-    
-    for _, bypassData in pairs(bypassMethods) do
-        CreateButton(bypassData[1], SecurityTab, function()
-            if securitySystem and securitySystem.BypassMethods then
-                local bypassCode = securitySystem.BypassMethods[bypassData[2]]
-                if bypassCode then
-                    local success, err = pcall(function()
-                        loadstring(bypassCode)()
-                    end)
-                    if success then
-                        print("✅ Applied: " .. bypassData[1])
-                    else
-                        warn("❌ Bypass failed: " .. tostring(err))
-                    end
-                else
-                    print("⚠️ Bypass method not available")
-                end
-            else
-                print("⚠️ Security system not available")
-            end
-        end)
-    end
-    
-    CreateButton("🛡️ Apply All Bypasses", SecurityTab, function()
-        if securitySystem and type(securitySystem.ApplyFullProtection) == "function" then
+    CreateButton("📁 Create Script Folder", DashboardTab, function()
+        if writefile then
             local success, err = pcall(function()
-                securitySystem:ApplyFullProtection()
+                writefile("AIScriptWriter/README.txt", "AI Script Writer Generated Files\nCreated: " .. os.date())
             end)
             if success then
-                print("✅ All security systems activated!")
+                print("✅ Script folder created!")
             else
-                warn("❌ Security activation failed: " .. tostring(err))
+                warn("❌ Folder creation failed: " .. tostring(err))
             end
         else
-            print("⚠️ Security system not available")
+            print("⚠️ writefile function not available")
         end
+    end)
+    
+    CreateButton("🔄 Refresh Interface", DashboardTab, function()
+        ScreenGui:Destroy()
+        AdvancedGUI:CreateFallbackInterface()
+    end)
+    
+    -- Script Generator Tab
+    local GeneratorTab = CreateTab("Generator", "🤖")
+    
+    CreateSection("Script Templates", GeneratorTab)
+    
+    local scriptTemplates = {
+        {"Aimbot", "Target aiming system"},
+        {"ESP", "Player visibility"},
+        {"Speed", "Movement enhancement"},
+        {"Fly", "Flying capability"},
+        {"Noclip", "Wall passing"},
+        {"Autofarm", "Auto collection"}
+    }
+    
+    for _, template in pairs(scriptTemplates) do
+        CreateButton(template[1], GeneratorTab, function()
+            print("🎯 Selected: " .. template[1])
+            AdvancedGUI:ShowScriptPreview(template[1], template[2])
+        end)
+    end
+    
+    CreateSection("Quick Generation", GeneratorTab)
+    
+    CreateButton("⚡ Generate All Scripts", GeneratorTab, function()
+        print("🚀 Generating all script templates...")
+        for _, template in pairs(scriptTemplates) do
+            AdvancedGUI:GenerateAndSaveScript(template[1])
+        end
+    end)
+    
+    -- Tools Tab
+    local ToolsTab = CreateTab("Tools", "🛠️")
+    
+    CreateSection("Utility Tools", ToolsTab)
+    
+    CreateButton("🎯 Player ESP", ToolsTab, function()
+        AdvancedGUI:CreatePlayerESP()
+    end)
+    
+    CreateButton("⚡ Speed Hack", ToolsTab, function()
+        AdvancedGUI:CreateSpeedHack()
+    end)
+    
+    CreateButton("🕶️ NoClip", ToolsTab, function()
+        AdvancedGUI:CreateNoClip()
+    end)
+    
+    CreateButton("🚀 Fly Hack", ToolsTab, function()
+        AdvancedGUI:CreateFlyHack()
+    end)
+    
+    CreateButton("🔍 Anti-AFK", ToolsTab, function()
+        AdvancedGUI:CreateAntiAFK()
     end)
     
     -- Settings Tab
     local SettingsTab = CreateTab("Settings", "⚙️")
     
-    CreateSection("UI Settings", SettingsTab)
+    CreateSection("Interface Settings", SettingsTab)
     
-    CreateLabel("Always On Top: Enabled", SettingsTab)
-    CreateLabel("Show Notifications: Enabled", SettingsTab)
+    CreateLabel("Theme: Dark Blue", SettingsTab)
+    CreateLabel("Transparency: 5%", SettingsTab)
+    CreateLabel("Animation: Basic", SettingsTab)
     
-    CreateSection("Script Settings", SettingsTab)
+    CreateSection("System Information", SettingsTab)
     
-    CreateLabel("Auto-Save Scripts: Enabled", SettingsTab)
-    CreateLabel("Auto-Execute: Disabled", SettingsTab)
+    CreateLabel("🤖 AI Script Writer v5.0", SettingsTab)
+    CreateLabel("🔄 Autonomous Fallback Mode", SettingsTab)
+    CreateLabel("📊 No External Dependencies", SettingsTab)
+    CreateLabel("🎯 Full GUI Functionality", SettingsTab)
     
-    CreateSection("Information", SettingsTab)
+    CreateSection("Actions", SettingsTab)
     
-    CreateLabel("🤖 AI MEGA SCRIPT WRITER v5.0", SettingsTab)
-    CreateLabel("📊 15,000+ Lines of Code", SettingsTab)
-    CreateLabel("🎯 Advanced AI Systems", SettingsTab)
-    CreateLabel("🛡️ Real Security Bypasses", SettingsTab)
+    CreateButton("🔄 Restart Interface", SettingsTab, function()
+        ScreenGui:Destroy()
+        wait(0.5)
+        AdvancedGUI:CreateFallbackInterface()
+    end)
+    
+    CreateButton("🗑️ Clean Up", SettingsTab, function()
+        ScreenGui:Destroy()
+        print("✅ Interface cleaned up!")
+    end)
     
     -- Close button functionality
     CloseButton.MouseButton1Click:Connect(function()
-        if game:GetService("TweenService") then
-            game:GetService("TweenService"):Create(MainFrame, TweenInfo.new(0.3), {
-                Size = UDim2.new(0, 0, 0, 0),
-                Position = UDim2.new(0.5, 0, 0.5, 0)
-            }):Play()
-            
-            wait(0.3)
-        end
         ScreenGui:Destroy()
+        print("✅ Interface closed!")
     end)
     
     -- Draggable window
@@ -624,31 +431,144 @@ function AdvancedGUI:CreateFallbackInterface(aiEngine, securitySystem)
         Tabs["Dashboard"].Button.MouseButton1Click()
     end
     
+    print("✅ Autonomous Fallback Interface Created Successfully!")
     return ScreenGui
 end
 
--- Fallback script preview
-function AdvancedGUI:ShowFallbackScriptPreview(script)
-    if not script then
-        warn("❌ No script provided for preview")
+-- Script generation functions
+function AdvancedGUI:GenerateAndSaveScript(scriptType)
+    if not writefile then
+        print("⚠️ writefile function not available")
         return
     end
     
-    local coreGui = game:GetService("CoreGui")
-    if not coreGui then
-        warn("❌ CoreGui not available")
-        return
+    local scripts = {
+        Aimbot = [[
+            -- Simple Aimbot Script
+            local Players = game:GetService("Players")
+            local LocalPlayer = Players.LocalPlayer
+            local Mouse = LocalPlayer:GetMouse()
+            
+            print("🎯 Aimbot loaded! Right-click to target nearest player.")
+            
+            Mouse.Button2Down:Connect(function()
+                local closestPlayer = nil
+                local closestDistance = math.huge
+                
+                for _, player in pairs(Players:GetPlayers()) do
+                    if player ~= LocalPlayer and player.Character and player.Character:FindFirstChild("Head") then
+                        local distance = (player.Character.Head.Position - LocalPlayer.Character.Head.Position).Magnitude
+                        if distance < closestDistance then
+                            closestDistance = distance
+                            closestPlayer = player
+                        end
+                    end
+                end
+                
+                if closestPlayer then
+                    LocalPlayer.Character:SetPrimaryPartCFrame(CFrame.new(
+                        LocalPlayer.Character.PrimaryPart.Position,
+                        closestPlayer.Character.Head.Position
+                    ))
+                    print("🎯 Targeted: " .. closestPlayer.Name)
+                end
+            end)
+        ]],
+        
+        ESP = [[
+            -- Simple ESP Script
+            local Players = game:GetService("Players")
+            local LocalPlayer = Players.LocalPlayer
+            
+            print("👁️ ESP loaded! Player boxes visible.")
+            
+            function createESP(player)
+                if player ~= LocalPlayer and player.Character then
+                    local highlight = Instance.new("Highlight")
+                    highlight.FillColor = Color3.fromRGB(255, 0, 0)
+                    highlight.OutlineColor = Color3.fromRGB(255, 255, 255)
+                    highlight.Parent = player.Character
+                    
+                    player.CharacterAdded:Connect(function(character)
+                        wait(1)
+                        local newHighlight = Instance.new("Highlight")
+                        newHighlight.FillColor = Color3.fromRGB(255, 0, 0)
+                        newHighlight.OutlineColor = Color3.fromRGB(255, 255, 255)
+                        newHighlight.Parent = character
+                    end)
+                end
+            end
+            
+            for _, player in pairs(Players:GetPlayers()) do
+                createESP(player)
+            end
+            
+            Players.PlayerAdded:Connect(createESP)
+        ]],
+        
+        Speed = [[
+            -- Speed Hack Script
+            local Players = game:GetService("Players")
+            local LocalPlayer = Players.LocalPlayer
+            
+            print("⚡ Speed hack loaded! Press Z to toggle.")
+            
+            local speedEnabled = false
+            local originalWalkSpeed = 16
+            
+            if LocalPlayer.Character then
+                originalWalkSpeed = LocalPlayer.Character:FindFirstChildOfClass("Humanoid").WalkSpeed
+            end
+            
+            local function toggleSpeed()
+                speedEnabled = not speedEnabled
+                if LocalPlayer.Character then
+                    local humanoid = LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
+                    if humanoid then
+                        if speedEnabled then
+                            humanoid.WalkSpeed = 50
+                            print("⚡ Speed hack: ON")
+                        else
+                            humanoid.WalkSpeed = originalWalkSpeed
+                            print("⚡ Speed hack: OFF")
+                        end
+                    end
+                end
+            end
+            
+            game:GetService("UserInputService").InputBegan:Connect(function(input)
+                if input.KeyCode == Enum.KeyCode.Z then
+                    toggleSpeed()
+                end
+            end)
+        ]]
+    }
+    
+    local scriptContent = scripts[scriptType] or "-- Script template not found"
+    local fileName = scriptType .. ".lua"
+    
+    local success, err = pcall(function()
+        writefile("AIScriptWriter/" .. fileName, scriptContent)
+    end)
+    
+    if success then
+        print("✅ Saved: " .. fileName)
+    else
+        warn("❌ Save failed: " .. tostring(err))
     end
+end
+
+function AdvancedGUI:ShowScriptPreview(scriptName, description)
+    local coreGui = game:GetService("CoreGui")
     
     local PreviewGUI = Instance.new("ScreenGui")
     PreviewGUI.Name = "ScriptPreview"
     PreviewGUI.Parent = coreGui
     
     local PreviewFrame = Instance.new("Frame")
-    PreviewFrame.Size = UDim2.new(0, 500, 0, 400)
-    PreviewFrame.Position = UDim2.new(0.5, -250, 0.5, -200)
+    PreviewFrame.Size = UDim2.new(0, 400, 0, 300)
+    PreviewFrame.Position = UDim2.new(0.5, -200, 0.5, -150)
     PreviewFrame.BackgroundColor3 = Color3.fromRGB(15, 15, 25)
-    PreviewFrame.BackgroundTransparency = 0.05
     PreviewFrame.BorderSizePixel = 0
     PreviewFrame.Parent = PreviewGUI
     
@@ -656,182 +576,242 @@ function AdvancedGUI:ShowFallbackScriptPreview(script)
     UICorner.CornerRadius = UDim.new(0, 12)
     UICorner.Parent = PreviewFrame
     
-    local UIStroke = Instance.new("UIStroke")
-    UIStroke.Color = Color3.fromRGB(80, 120, 255)
-    UIStroke.Thickness = 2
-    UIStroke.Parent = PreviewFrame
-    
-    -- Header
-    local Header = Instance.new("Frame")
-    Header.Size = UDim2.new(1, 0, 0, 50)
-    Header.BackgroundColor3 = Color3.fromRGB(25, 25, 40)
-    Header.BorderSizePixel = 0
-    Header.Parent = PreviewFrame
-    
     local Title = Instance.new("TextLabel")
-    Title.Size = UDim2.new(1, -100, 1, 0)
-    Title.Position = UDim2.new(0, 20, 0, 0)
-    Title.BackgroundTransparency = 1
-    Title.Text = "Script Preview - " .. (script.Name or "Unknown")
+    Title.Size = UDim2.new(1, 0, 0, 50)
+    Title.BackgroundColor3 = Color3.fromRGB(25, 25, 40)
+    Title.Text = "Script: " .. scriptName
     Title.TextColor3 = Color3.fromRGB(255, 255, 255)
     Title.Font = Enum.Font.GothamBold
     Title.TextSize = 16
-    Title.TextXAlignment = Enum.TextXAlignment.Left
-    Title.Parent = Header
+    Title.Parent = PreviewFrame
+    
+    local Description = Instance.new("TextLabel")
+    Description.Size = UDim2.new(1, -40, 0, 60)
+    Description.Position = UDim2.new(0, 20, 0, 60)
+    Description.BackgroundTransparency = 1
+    Description.Text = description
+    Description.TextColor3 = Color3.fromRGB(200, 200, 255)
+    Description.Font = Enum.Font.Gotham
+    Description.TextSize = 12
+    Description.TextWrapped = true
+    Description.Parent = PreviewFrame
     
     local CloseButton = Instance.new("TextButton")
-    CloseButton.Size = UDim2.new(0, 30, 0, 30)
-    CloseButton.Position = UDim2.new(1, -35, 0, 10)
-    CloseButton.BackgroundColor3 = Color3.fromRGB(255, 60, 80)
-    CloseButton.Text = "×"
+    CloseButton.Size = UDim2.new(0, 100, 0, 40)
+    CloseButton.Position = UDim2.new(0.5, -50, 1, -60)
+    CloseButton.BackgroundColor3 = Color3.fromRGB(60, 80, 255)
+    CloseButton.Text = "Close"
     CloseButton.TextColor3 = Color3.fromRGB(255, 255, 255)
     CloseButton.Font = Enum.Font.GothamBold
-    CloseButton.TextSize = 18
-    CloseButton.Parent = Header
+    CloseButton.TextSize = 14
+    CloseButton.Parent = PreviewFrame
     
-    local CloseCorner = Instance.new("UICorner")
-    CloseCorner.CornerRadius = UDim.new(0, 8)
-    CloseCorner.Parent = CloseButton
+    local GenerateButton = Instance.new("TextButton")
+    GenerateButton.Size = UDim2.new(0, 100, 0, 40)
+    GenerateButton.Position = UDim2.new(0.5, -50, 1, -110)
+    GenerateButton.BackgroundColor3 = Color3.fromRGB(40, 180, 40)
+    GenerateButton.Text = "Generate"
+    GenerateButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+    GenerateButton.Font = Enum.Font.GothamBold
+    GenerateButton.TextSize = 14
+    GenerateButton.Parent = PreviewFrame
     
-    -- Content
-    local ContentFrame = Instance.new("ScrollingFrame")
-    ContentFrame.Size = UDim2.new(1, -40, 1, -100)
-    ContentFrame.Position = UDim2.new(0, 20, 0, 60)
-    ContentFrame.BackgroundTransparency = 1
-    ContentFrame.ScrollBarThickness = 6
-    ContentFrame.ScrollBarImageColor3 = Color3.fromRGB(80, 120, 255)
-    ContentFrame.Parent = PreviewFrame
-    
-    local ContentLayout = Instance.new("UIListLayout")
-    ContentLayout.Padding = UDim.new(0, 10)
-    ContentLayout.Parent = ContentFrame
-    
-    local ContentPadding = Instance.new("UIPadding")
-    ContentPadding.PaddingTop = UDim.new(0, 10)
-    ContentPadding.PaddingLeft = UDim.new(0, 10)
-    ContentPadding.PaddingRight = UDim.new(0, 10)
-    ContentPadding.Parent = ContentFrame
-    
-    -- Script info
-    local function CreateLabel(text, parent)
-        local Label = Instance.new("TextLabel")
-        Label.Size = UDim2.new(1, -20, 0, 25)
-        Label.BackgroundTransparency = 1
-        Label.Text = text
-        Label.TextColor3 = Color3.fromRGB(255, 255, 255)
-        Label.Font = Enum.Font.Gotham
-        Label.TextSize = 12
-        Label.TextXAlignment = Enum.TextXAlignment.Left
-        Label.Parent = parent
-        return Label
-    end
-    
-    CreateLabel("Name: " .. (script.Name or "Unknown"), ContentFrame)
-    CreateLabel("Category: " .. (script.Category or "General"), ContentFrame)
-    CreateLabel("Risk: " .. (script.Risk or "Unknown"), ContentFrame)
-    
-    -- Script content (truncated)
-    local previewText = ""
-    if script.Content then
-        previewText = string.sub(script.Content, 1, 1000)
-        if #script.Content > 1000 then
-            previewText = previewText .. "\n\n... [content truncated] ..."
-        end
-    else
-        previewText = "No script content available"
-    end
-    
-    local ContentLabel = Instance.new("TextLabel")
-    ContentLabel.Size = UDim2.new(1, -20, 0, 200)
-    ContentLabel.BackgroundTransparency = 1
-    ContentLabel.Text = previewText
-    ContentLabel.TextColor3 = Color3.fromRGB(200, 200, 255)
-    ContentLabel.Font = Enum.Font.Gotham
-    ContentLabel.TextSize = 11
-    ContentLabel.TextXAlignment = Enum.TextXAlignment.Left
-    ContentLabel.TextYAlignment = Enum.TextYAlignment.Top
-    ContentLabel.TextWrapped = true
-    ContentLabel.Parent = ContentFrame
-    
-    -- Buttons
-    local ButtonFrame = Instance.new("Frame")
-    ButtonFrame.Size = UDim2.new(1, -40, 0, 50)
-    ButtonFrame.Position = UDim2.new(0, 20, 1, -60)
-    ButtonFrame.BackgroundTransparency = 1
-    ButtonFrame.Parent = PreviewFrame
-    
-    local ButtonList = Instance.new("UIListLayout")
-    ButtonList.FillDirection = Enum.FillDirection.Horizontal
-    ButtonList.Padding = UDim.new(0, 10)
-    ButtonList.Parent = ButtonFrame
-    
-    local function CreateActionButton(text, callback)
-        local Button = Instance.new("TextButton")
-        Button.Size = UDim2.new(0.3, 0, 1, 0)
-        Button.BackgroundColor3 = Color3.fromRGB(40, 40, 60)
-        Button.Text = text
-        Button.TextColor3 = Color3.fromRGB(255, 255, 255)
-        Button.Font = Enum.Font.GothamBold
-        Button.TextSize = 12
-        Button.Parent = ButtonFrame
-        
-        local ButtonCorner = Instance.new("UICorner")
-        ButtonCorner.CornerRadius = UDim.new(0, 8)
-        ButtonCorner.Parent = Button
-        
-        Button.MouseButton1Click:Connect(callback)
-        
-        return Button
-    end
-    
-    CreateActionButton("▶️ Execute", function()
-        if script and script.Content then
-            local success, err = pcall(function()
-                loadstring(script.Content)()
-            end)
-            if success then
-                print("✅ Executed: " .. (script.Name or "Unknown"))
-            else
-                warn("❌ Execution failed: " .. tostring(err))
-            end
-        end
-        PreviewGUI:Destroy()
-    end)
-    
-    CreateActionButton("💾 Save", function()
-        if script and script.Content and writefile then
-            local success, err = pcall(function()
-                writefile("AIScriptWriter/" .. (script.Name or "script") .. ".lua", script.Content)
-            end)
-            if success then
-                print("✅ Saved: " .. (script.Name or "script") .. ".lua")
-            else
-                warn("❌ Save failed: " .. tostring(err))
-            end
-        end
-        PreviewGUI:Destroy()
-    end)
-    
-    CreateActionButton("📋 Copy", function()
-        if script and script.Content and setclipboard then
-            local success, err = pcall(function()
-                setclipboard(script.Content)
-            end)
-            if success then
-                print("✅ Copied to clipboard!")
-            else
-                warn("❌ Copy failed: " .. tostring(err))
-            end
-        end
-    end)
-    
-    -- Close functionality
     CloseButton.MouseButton1Click:Connect(function()
         PreviewGUI:Destroy()
     end)
     
-    -- Update canvas size
-    ContentFrame.CanvasSize = UDim2.new(0, 0, 0, ContentLayout.AbsoluteContentSize.Y)
+    GenerateButton.MouseButton1Click:Connect(function()
+        self:GenerateAndSaveScript(scriptName)
+        PreviewGUI:Destroy()
+    end)
+    
+    print("📋 Showing preview for: " .. scriptName)
 end
 
+-- Tool functions
+function AdvancedGUI:CreatePlayerESP()
+    print("👁️ Creating Player ESP...")
+    loadstring([[
+        local Players = game:GetService("Players")
+        local LocalPlayer = Players.LocalPlayer
+        
+        function createESP(player)
+            if player ~= LocalPlayer and player.Character then
+                local highlight = Instance.new("Highlight")
+                highlight.FillColor = Color3.fromRGB(255, 0, 0)
+                highlight.OutlineColor = Color3.fromRGB(255, 255, 255)
+                highlight.Parent = player.Character
+                
+                player.CharacterAdded:Connect(function(character)
+                    wait(1)
+                    local newHighlight = Instance.new("Highlight")
+                    newHighlight.FillColor = Color3.fromRGB(255, 0, 0)
+                    newHighlight.OutlineColor = Color3.fromRGB(255, 255, 255)
+                    newHighlight.Parent = character
+                end)
+            end
+        end
+        
+        for _, player in pairs(Players:GetPlayers()) do
+            createESP(player)
+        end
+        
+        Players.PlayerAdded:Connect(createESP)
+        print("✅ Player ESP activated!")
+    ]])()
+end
+
+function AdvancedGUI:CreateSpeedHack()
+    print("⚡ Creating Speed Hack...")
+    loadstring([[
+        local Players = game:GetService("Players")
+        local LocalPlayer = Players.LocalPlayer
+        
+        local speedEnabled = false
+        local originalWalkSpeed = 16
+        
+        if LocalPlayer.Character then
+            originalWalkSpeed = LocalPlayer.Character:FindFirstChildOfClass("Humanoid").WalkSpeed
+        end
+        
+        local function toggleSpeed()
+            speedEnabled = not speedEnabled
+            if LocalPlayer.Character then
+                local humanoid = LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
+                if humanoid then
+                    if speedEnabled then
+                        humanoid.WalkSpeed = 50
+                        print("⚡ Speed hack: ON")
+                    else
+                        humanoid.WalkSpeed = originalWalkSpeed
+                        print("⚡ Speed hack: OFF")
+                    end
+                end
+            end
+        end
+        
+        game:GetService("UserInputService").InputBegan:Connect(function(input)
+            if input.KeyCode == Enum.KeyCode.Z then
+                toggleSpeed()
+            end
+        end)
+        
+        print("✅ Speed Hack activated! Press Z to toggle.")
+    ]])()
+end
+
+function AdvancedGUI:CreateNoClip()
+    print("🕶️ Creating NoClip...")
+    loadstring([[
+        local Players = game:GetService("Players")
+        local LocalPlayer = Players.LocalPlayer
+        
+        local noclip = false
+        local connection
+        
+        local function toggleNoclip()
+            noclip = not noclip
+            if noclip then
+                print("🕶️ NoClip: ON")
+                connection = game:GetService("RunService").Stepped:Connect(function()
+                    if LocalPlayer.Character then
+                        for _, part in pairs(LocalPlayer.Character:GetDescendants()) do
+                            if part:IsA("BasePart") then
+                                part.CanCollide = false
+                            end
+                        end
+                    end
+                end)
+            else
+                print("🕶️ NoClip: OFF")
+                if connection then
+                    connection:Disconnect()
+                end
+            end
+        end
+        
+        game:GetService("UserInputService").InputBegan:Connect(function(input)
+            if input.KeyCode == Enum.KeyCode.X then
+                toggleNoclip()
+            end
+        end)
+        
+        print("✅ NoClip activated! Press X to toggle.")
+    ]])()
+end
+
+function AdvancedGUI:CreateFlyHack()
+    print("🚀 Creating Fly Hack...")
+    loadstring([[
+        local Players = game:GetService("Players")
+        local LocalPlayer = Players.LocalPlayer
+        
+        local flyEnabled = false
+        local bodyVelocity
+        
+        local function toggleFly()
+            flyEnabled = not flyEnabled
+            
+            if flyEnabled then
+                print("🚀 Fly Hack: ON")
+                bodyVelocity = Instance.new("BodyVelocity")
+                bodyVelocity.Velocity = Vector3.new(0, 0, 0)
+                bodyVelocity.MaxForce = Vector3.new(0, 0, 0)
+                
+                if LocalPlayer.Character then
+                    bodyVelocity.Parent = LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+                end
+                
+                game:GetService("UserInputService").InputBegan:Connect(function(input)
+                    if flyEnabled and LocalPlayer.Character then
+                        local root = LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+                        if root and bodyVelocity then
+                            if input.KeyCode == Enum.KeyCode.Space then
+                                bodyVelocity.Velocity = Vector3.new(0, 50, 0)
+                            elseif input.KeyCode == Enum.KeyCode.LeftShift then
+                                bodyVelocity.Velocity = Vector3.new(0, -50, 0)
+                            end
+                        end
+                    end
+                end)
+                
+                game:GetService("UserInputService").InputEnded:Connect(function(input)
+                    if input.KeyCode == Enum.KeyCode.Space or input.KeyCode == Enum.KeyCode.LeftShift then
+                        if bodyVelocity then
+                            bodyVelocity.Velocity = Vector3.new(0, 0, 0)
+                        end
+                    end
+                end)
+            else
+                print("🚀 Fly Hack: OFF")
+                if bodyVelocity then
+                    bodyVelocity:Destroy()
+                end
+            end
+        end
+        
+        game:GetService("UserInputService").InputBegan:Connect(function(input)
+            if input.KeyCode == Enum.KeyCode.C then
+                toggleFly()
+            end
+        end)
+        
+        print("✅ Fly Hack activated! Press C to toggle, Space to go up, Shift to go down.")
+    ]])()
+end
+
+function AdvancedGUI:CreateAntiAFK()
+    print("🔍 Creating Anti-AFK...")
+    loadstring([[
+        local VirtualUser = game:GetService("VirtualUser")
+        game:GetService("Players").LocalPlayer.Idled:Connect(function()
+            VirtualUser:CaptureController()
+            VirtualUser:ClickButton2(Vector2.new())
+            print("🔄 Anti-AFK: Prevented AFK")
+        end)
+        print("✅ Anti-AFK activated!")
+    ]])()
+end
+
+-- Initialize the interface
 return AdvancedGUI
